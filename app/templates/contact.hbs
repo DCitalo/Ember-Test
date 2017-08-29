@@ -1,26 +1,17 @@
 <div class="jumbotron text-center">
-   <h1>Contact Page</h1>
+	<h1>Fale Conosco</h1>
 
-   <br/><br/>
-
-   <p>Fale conosco, gostariamos de ouvir sua opinião.</p>
-
-   <div class="form-horizontal form-group form-group-lg row">
-     <div class="col-xs-12 col-sm-6 col-md-12 p-3">
-       {{input type="email" value=emailAddress class="form-control" placeholder="Por favor digite seu e-mail." autofocus="autofocus"}}
-     </div>
-     <div class="col-xs-12 col-sm-6 col-md-12 p-3">
-       {{input type="text" value=contato class="form-control" placeholder="Deixe aqui a sua opinião." autofocus="autofocus"}}
-     </div>
-     <div class="col-xs-12 col-sm-12 col-md-12 p-3">
-       <button class="btn btn-primary btn-lg btn-block" {{action 'saveInvitation'}} disabled={{isDisabled}}>ENVIAR</button>
-     </div>
-   </div> 
-
-   {{#if responseMessage}}
-     <div class="alert alert-success">{{responseMessage}}</div>
-   {{/if}}
-
-   <br/><br/>
-
+   	<br/><br/>
+	<form>
+	  <div class="form-group">
+	    {{input type="email" value=emailAddress class="form-control" placeholder="Por favor digite seu e-mail." autofocus="autofocus"}}
+	  </div>
+	  <div class="form-group">
+	    {{textarea value=contato class="form-control" placeholder="Deixe aqui a sua opinião. (Pelo menos 5 caracteres.)" rows="7" }}
+	  </div>
+	  <button class="btn btn-primary btn-lg btn-block" {{action 'saveInvitation'}} disabled={{isDisabled}}>ENVIAR</button>
+	  {{#if responseMessage}}
+	     <div class="alert alert-success">{{responseMessage}}</div>
+	   {{/if}}
+	</form>
 </div>
