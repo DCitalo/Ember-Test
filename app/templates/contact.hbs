@@ -1,7 +1,5 @@
+<h1>Fale Conosco</h1>
 <div class="jumbotron text-center">
-	<h1>Fale Conosco</h1>
-
-   	<br/><br/>
 	<form>
 	  <div class="form-group">
 	    {{input type="email" value=emailAddress class="form-control" placeholder="Por favor digite seu e-mail." autofocus="autofocus"}}
@@ -9,7 +7,7 @@
 	  <div class="form-group">
 	    {{textarea value=contato class="form-control" placeholder="Deixe aqui a sua opinião. (Pelo menos 5 caracteres.)" rows="7" }}
 	  </div>
-	  <button class="btn btn-primary btn-lg btn-block" {{action 'saveInvitation'}} disabled={{isDisabled}}>ENVIAR</button>
+	  <button class="btn btn-primary btn-lg btn-block" {{action 'SaveMessage'}} disabled={{isDisabled}}>ENVIAR</button>
 	  {{#if responseMessage}}
 	     <div class="alert alert-success">{{responseMessage}}</div>
 	   {{/if}}
