@@ -1,0 +1,22 @@
+<!-- app/templates/admin/invitations.hbs -->
+
+<h1>Mensagems</h1>
+
+<table class="table table-bordered table-striped">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>E-mail</th>
+      <th>Mensagem</th>
+    </tr>
+  </thead>
+  <tbody>
+  {{#each model as |Mensagem|}}
+    <tr>
+      <th>{{Mensagem.id}}</th>
+      <td>{{Mensagem.email}}</td>
+      <td>{{Mensagem.contato}}</td>
+    </tr>
+  {{/each}}
+  </tbody>
+</table>

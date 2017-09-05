@@ -48,7 +48,6 @@ define('ember-test/controllers/contact', ['exports'], function (exports) {
 		value: true
 	});
 	exports.default = Ember.Controller.extend({
-
 		headerMessage: 'Fale Conosco',
 		responseMessage: '',
 		emailAddress: '',
@@ -57,19 +56,16 @@ define('ember-test/controllers/contact', ['exports'], function (exports) {
 		isValidMessage: Ember.computed.gte('contato', /5/),
 		isValid: Ember.computed.and('isValidEmail', 'isValidMessage'),
 		isDisabled: Ember.computed.not('isValid'),
-
 		actions: {
 			SaveMessage: function SaveMessage() {
 				var _this = this;
 
 				var email = this.get('emailAddress');
 				var contato = this.get('contato');
-
 				var newMessage = this.store.createRecord('mensagem', {
 					email: email,
 					contato: contato
 				});
-
 				newMessage.save().then(function (response) {
 					alert('Seu e-mail: ' + _this.get('emailAddress') + '; Sua opini\xE3o:' + _this.get('contato') + ' ;');
 					_this.set('responseMessage', 'Muito Obrigado! Estaremos entrando em contato em breve.');
@@ -78,7 +74,6 @@ define('ember-test/controllers/contact', ['exports'], function (exports) {
 				});
 			}
 		}
-
 	});
 });
 define('ember-test/controllers/index', ['exports'], function (exports) {
@@ -374,11 +369,13 @@ define('ember-test/router', ['exports', 'ember-test/config/environment'], functi
 
     this.route('admin', function () {
       this.route('invitations');
+      this.route('contacts');
       this.route('contact');
     });
 
     this.route('libraries', function () {
       this.route('new');
+      this.route('edit', { path: '/:library_id/edit' });
     });
   });
 
@@ -424,6 +421,43 @@ define('ember-test/routes/contact', ['exports'], function (exports) {
   });
   exports.default = Ember.Route.extend({});
 });
+define('ember-test/routes/libraries/edit', ['exports'], function (exports) {
+  'use strict';
+
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.default = Ember.Route.extend({
+    model: function model(params) {
+      return this.store.findRecord('library', params.library_id);
+    },
+
+
+    actions: {
+      saveLibrary: function saveLibrary(library) {
+        var _this = this;
+
+        library.save().then(function () {
+          return _this.transitionTo('libraries');
+        });
+      },
+      willTransition: function willTransition(transition) {
+
+        var model = this.controller.get('model');
+
+        if (model.get('hasDirtyAttributes')) {
+          var confirmation = confirm("Your changes haven't saved yet. Would you like to leave this form?");
+
+          if (confirmation) {
+            model.rollbackAttributes();
+          } else {
+            transition.abort();
+          }
+        }
+      }
+    }
+  });
+});
 define('ember-test/routes/libraries/index', ['exports'], function (exports) {
   'use strict';
 
@@ -433,7 +467,19 @@ define('ember-test/routes/libraries/index', ['exports'], function (exports) {
   exports.default = Ember.Route.extend({
     model: function model() {
       return this.store.findAll('library');
+    },
+
+
+    actions: {
+      deleteLibrary: function deleteLibrary(library) {
+        var confirmation = confirm('Are you sure?');
+
+        if (confirmation) {
+          library.destroyRecord();
+        }
+      }
     }
+
   });
 });
 define('ember-test/routes/libraries/new', ['exports'], function (exports) {
@@ -551,13 +597,21 @@ define("ember-test/templates/libraries", ["exports"], function (exports) {
   });
   exports.default = Ember.HTMLBars.template({ "id": "a1NLuxuF", "block": "{\"statements\":[[4,\" app/templates/libraries.hbs \"],[0,\"\\n\"],[11,\"h1\",[]],[13],[0,\"Libraries\"],[14],[0,\"\\n\\n\"],[11,\"div\",[]],[15,\"class\",\"well\"],[13],[0,\"\\n  \"],[11,\"ul\",[]],[15,\"class\",\"nav nav-pills\"],[13],[0,\"\\n    \"],[6,[\"link-to\"],[\"libraries.index\"],[[\"tagName\"],[\"li\"]],{\"statements\":[[11,\"a\",[]],[15,\"href\",\"\"],[13],[0,\"List all\"],[14]],\"locals\":[]},null],[0,\"\\n    \"],[6,[\"link-to\"],[\"libraries.new\"],[[\"tagName\"],[\"li\"]],{\"statements\":[[11,\"a\",[]],[15,\"href\",\"\"],[13],[0,\"Add new\"],[14]],\"locals\":[]},null],[0,\"\\n  \"],[14],[0,\"\\n\"],[14],[0,\"\\n\\n\"],[1,[26,[\"outlet\"]],false]],\"locals\":[],\"named\":[],\"yields\":[],\"hasPartials\":false}", "meta": { "moduleName": "ember-test/templates/libraries.hbs" } });
 });
+define("ember-test/templates/libraries/edit", ["exports"], function (exports) {
+  "use strict";
+
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.default = Ember.HTMLBars.template({ "id": "CCxPd5Zy", "block": "{\"statements\":[[11,\"h2\",[]],[13],[0,\"Edit Library\"],[14],[0,\"\\n\\n\"],[11,\"div\",[]],[15,\"class\",\"form-horizontal\"],[13],[0,\"\\n  \"],[11,\"div\",[]],[15,\"class\",\"form-group\"],[13],[0,\"\\n    \"],[11,\"label\",[]],[15,\"class\",\"col-sm-2 control-label\"],[13],[0,\"Name\"],[14],[0,\"\\n    \"],[11,\"div\",[]],[15,\"class\",\"col-sm-10\"],[13],[0,\"\\n      \"],[1,[33,[\"input\"],null,[[\"type\",\"value\",\"class\",\"placeholder\"],[\"text\",[28,[\"model\",\"name\"]],\"form-control\",\"The name of the Library\"]]],false],[0,\"\\n    \"],[14],[0,\"\\n  \"],[14],[0,\"\\n  \"],[11,\"div\",[]],[15,\"class\",\"form-group\"],[13],[0,\"\\n    \"],[11,\"label\",[]],[15,\"class\",\"col-sm-2 control-label\"],[13],[0,\"Address\"],[14],[0,\"\\n    \"],[11,\"div\",[]],[15,\"class\",\"col-sm-10\"],[13],[0,\"\\n      \"],[1,[33,[\"input\"],null,[[\"type\",\"value\",\"class\",\"placeholder\"],[\"text\",[28,[\"model\",\"address\"]],\"form-control\",\"The address of the Library\"]]],false],[0,\"\\n    \"],[14],[0,\"\\n  \"],[14],[0,\"\\n  \"],[11,\"div\",[]],[15,\"class\",\"form-group\"],[13],[0,\"\\n    \"],[11,\"label\",[]],[15,\"class\",\"col-sm-2 control-label\"],[13],[0,\"Phone\"],[14],[0,\"\\n    \"],[11,\"div\",[]],[15,\"class\",\"col-sm-10\"],[13],[0,\"\\n      \"],[1,[33,[\"input\"],null,[[\"type\",\"value\",\"class\",\"placeholder\"],[\"text\",[28,[\"model\",\"phone\"]],\"form-control\",\"The phone number of the Library\"]]],false],[0,\"\\n    \"],[14],[0,\"\\n  \"],[14],[0,\"\\n  \"],[11,\"div\",[]],[15,\"class\",\"form-group\"],[13],[0,\"\\n    \"],[11,\"div\",[]],[15,\"class\",\"col-sm-offset-2 col-sm-10\"],[13],[0,\"\\n      \"],[11,\"button\",[]],[15,\"type\",\"submit\"],[15,\"class\",\"btn btn-default\"],[5,[\"action\"],[[28,[null]],\"saveLibrary\",[28,[\"model\"]]]],[13],[0,\"Save changes\"],[14],[0,\"\\n    \"],[14],[0,\"\\n  \"],[14],[0,\"\\n\"],[14]],\"locals\":[],\"named\":[],\"yields\":[],\"hasPartials\":false}", "meta": { "moduleName": "ember-test/templates/libraries/edit.hbs" } });
+});
 define("ember-test/templates/libraries/index", ["exports"], function (exports) {
   "use strict";
 
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
-  exports.default = Ember.HTMLBars.template({ "id": "oRdjYrWn", "block": "{\"statements\":[[4,\" app/templates/libraries/index.hbs \"],[0,\"\\n\"],[11,\"h2\",[]],[13],[0,\"List\"],[14],[0,\"\\n\\n\"],[6,[\"each\"],[[28,[\"model\"]]],null,{\"statements\":[[0,\"  \"],[11,\"div\",[]],[15,\"class\",\"panel panel-default\"],[13],[0,\"\\n    \"],[11,\"div\",[]],[15,\"class\",\"panel-heading\"],[13],[0,\"\\n      \"],[11,\"h3\",[]],[15,\"class\",\"panel-title\"],[13],[1,[28,[\"library\",\"name\"]],false],[14],[0,\"\\n    \"],[14],[0,\"\\n    \"],[11,\"div\",[]],[15,\"class\",\"panel-body\"],[13],[0,\"\\n      \"],[11,\"p\",[]],[13],[0,\"Address: \"],[1,[28,[\"library\",\"address\"]],false],[14],[0,\"\\n      \"],[11,\"p\",[]],[13],[0,\"Phone: \"],[1,[28,[\"library\",\"phone\"]],false],[14],[0,\"\\n    \"],[14],[0,\"\\n  \"],[14],[0,\"\\n\"]],\"locals\":[\"library\"]},null]],\"locals\":[],\"named\":[],\"yields\":[],\"hasPartials\":false}", "meta": { "moduleName": "ember-test/templates/libraries/index.hbs" } });
+  exports.default = Ember.HTMLBars.template({ "id": "LpU1qz6c", "block": "{\"statements\":[[4,\" app/templates/libraries/index.hbs \"],[0,\"\\n\"],[11,\"h2\",[]],[13],[0,\"List\"],[14],[0,\"\\n\"],[11,\"div\",[]],[15,\"class\",\"row\"],[13],[0,\"\\n\"],[6,[\"each\"],[[28,[\"model\"]]],null,{\"statements\":[[0,\"    \"],[11,\"div\",[]],[15,\"class\",\"col-md-4\"],[13],[0,\"\\n      \"],[11,\"div\",[]],[15,\"class\",\"panel panel-default library-item\"],[13],[0,\"\\n        \"],[11,\"div\",[]],[15,\"class\",\"panel-heading\"],[13],[0,\"\\n          \"],[11,\"h3\",[]],[15,\"class\",\"panel-title\"],[13],[1,[28,[\"library\",\"name\"]],false],[14],[0,\"\\n        \"],[14],[0,\"\\n        \"],[11,\"div\",[]],[15,\"class\",\"panel-body\"],[13],[0,\"\\n          \"],[11,\"p\",[]],[13],[0,\"Address: \"],[1,[28,[\"library\",\"address\"]],false],[14],[0,\"\\n          \"],[11,\"p\",[]],[13],[0,\"Phone: \"],[1,[28,[\"library\",\"phone\"]],false],[14],[0,\"\\n        \"],[14],[0,\"\\n        \"],[11,\"div\",[]],[15,\"class\",\"panel-footer text-right\"],[13],[0,\"\\n          \"],[6,[\"link-to\"],[\"libraries.edit\",[28,[\"library\",\"id\"]]],[[\"class\"],[\"btn btn-success btn-xs\"]],{\"statements\":[[0,\"Edit\"]],\"locals\":[]},null],[0,\"\\n          \"],[11,\"button\",[]],[15,\"class\",\"btn btn-danger btn-xs\"],[5,[\"action\"],[[28,[null]],\"deleteLibrary\",[28,[\"library\"]]]],[13],[0,\"Delete\"],[14],[0,\"\\n        \"],[14],[0,\"\\n      \"],[14],[0,\"\\n    \"],[14],[0,\"\\n\"]],\"locals\":[\"library\"]},null],[14]],\"locals\":[],\"named\":[],\"yields\":[],\"hasPartials\":false}", "meta": { "moduleName": "ember-test/templates/libraries/index.hbs" } });
 });
 define("ember-test/templates/libraries/new", ["exports"], function (exports) {
   "use strict";
@@ -605,6 +659,6 @@ catch(err) {
 });
 
 if (!runningTests) {
-  require("ember-test/app")["default"].create({"LOG_ACTIVE_GENERATION":true,"LOG_TRANSITIONS":true,"LOG_TRANSITIONS_INTERNAL":true,"LOG_VIEW_LOOKUPS":true,"name":"ember-test","version":"0.0.0+"});
+  require("ember-test/app")["default"].create({"LOG_ACTIVE_GENERATION":true,"LOG_TRANSITIONS":true,"LOG_TRANSITIONS_INTERNAL":true,"LOG_VIEW_LOOKUPS":true,"name":"ember-test","version":"0.0.0+0effc2d7"});
 }
 //# sourceMappingURL=ember-test.map

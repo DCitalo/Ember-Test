@@ -1,4 +1,5 @@
 /* eslint-env node */
+/*eslint no-unused-vars: "error"*/
 'use strict';
 
 module.exports = function(environment) {

@@ -1,0 +1,37 @@
+define('ember-test/routes/libraries/edit', ['exports'], function (exports) {
+  'use strict';
+
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.default = Ember.Route.extend({
+    model: function model(params) {
+      return this.store.findRecord('library', params.library_id);
+    },
+
+
+    actions: {
+      saveLibrary: function saveLibrary(library) {
+        var _this = this;
+
+        library.save().then(function () {
+          return _this.transitionTo('libraries');
+        });
+      },
+      willTransition: function willTransition(transition) {
+
+        var model = this.controller.get('model');
+
+        if (model.get('hasDirtyAttributes')) {
+          var confirmation = confirm("Your changes haven't saved yet. Would you like to leave this form?");
+
+          if (confirmation) {
+            model.rollbackAttributes();
+          } else {
+            transition.abort();
+          }
+        }
+      }
+    }
+  });
+});
