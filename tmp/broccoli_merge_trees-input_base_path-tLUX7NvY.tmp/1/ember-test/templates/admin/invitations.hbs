@@ -1,0 +1,24 @@
+<!-- app/templates/admin/invitations.hbs -->
+
+<h1>Invitations</h1>
+
+<table class="table table-bordered table-striped">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>E-mail</th>
+      <th>Editar</th>
+      <th>Excluir</th>
+    </tr>
+  </thead>
+  <tbody>
+  {{#each model as |invitation|}}
+    <tr>
+      <th>{{invitation.id}}</th>
+      <td>{{invitation.email}}</td>
+      <td>{{#link-to 'libraries.edit' library.id class='btn btn-success btn-xs'}}Edit{{/link-to}}</td>
+      <td><button class="btn btn-danger btn-xs" {{action 'deleteLibrary' library}}>Delete</button></td>
+    </tr>
+  {{/each}}
+  </tbody>
+</table>

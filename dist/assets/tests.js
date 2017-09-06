@@ -60,6 +60,16 @@ define('ember-test/tests/app.lint-test', [], function () {
     assert.ok(true, 'routes/admin/contact.js should pass ESLint\n\n');
   });
 
+  QUnit.test('routes/admin/edit-invitations.js', function (assert) {
+    assert.expect(1);
+    assert.ok(true, 'routes/admin/edit-invitations.js should pass ESLint\n\n');
+  });
+
+  QUnit.test('routes/admin/edit-mensagem.js', function (assert) {
+    assert.expect(1);
+    assert.ok(true, 'routes/admin/edit-mensagem.js should pass ESLint\n\n');
+  });
+
   QUnit.test('routes/admin/invitations.js', function (assert) {
     assert.expect(1);
     assert.ok(true, 'routes/admin/invitations.js should pass ESLint\n\n');
@@ -422,6 +432,16 @@ define('ember-test/tests/tests.lint-test', [], function () {
     assert.ok(true, 'unit/routes/admin/contact-test.js should pass ESLint\n\n');
   });
 
+  QUnit.test('unit/routes/admin/edit-invitations-test.js', function (assert) {
+    assert.expect(1);
+    assert.ok(true, 'unit/routes/admin/edit-invitations-test.js should pass ESLint\n\n');
+  });
+
+  QUnit.test('unit/routes/admin/edit-mensagem-test.js', function (assert) {
+    assert.expect(1);
+    assert.ok(true, 'unit/routes/admin/edit-mensagem-test.js should pass ESLint\n\n');
+  });
+
   QUnit.test('unit/routes/admin/invitations-test.js', function (assert) {
     assert.expect(1);
     assert.ok(true, 'unit/routes/admin/invitations-test.js should pass ESLint\n\n');
@@ -519,6 +539,32 @@ define('ember-test/tests/unit/routes/admin/contact-test', ['ember-qunit'], funct
   'use strict';
 
   (0, _emberQunit.moduleFor)('route:admin/contact', 'Unit | Route | admin/contact', {
+    // Specify the other units that are required for this test.
+    // needs: ['controller:foo']
+  });
+
+  (0, _emberQunit.test)('it exists', function (assert) {
+    var route = this.subject();
+    assert.ok(route);
+  });
+});
+define('ember-test/tests/unit/routes/admin/edit-invitations-test', ['ember-qunit'], function (_emberQunit) {
+  'use strict';
+
+  (0, _emberQunit.moduleFor)('route:admin/edit-invitations', 'Unit | Route | admin/edit invitations', {
+    // Specify the other units that are required for this test.
+    // needs: ['controller:foo']
+  });
+
+  (0, _emberQunit.test)('it exists', function (assert) {
+    var route = this.subject();
+    assert.ok(route);
+  });
+});
+define('ember-test/tests/unit/routes/admin/edit-mensagem-test', ['ember-qunit'], function (_emberQunit) {
+  'use strict';
+
+  (0, _emberQunit.moduleFor)('route:admin/edit-mensagem', 'Unit | Route | admin/edit mensagem', {
     // Specify the other units that are required for this test.
     // needs: ['controller:foo']
   });

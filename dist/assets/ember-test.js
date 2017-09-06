@@ -371,6 +371,8 @@ define('ember-test/router', ['exports', 'ember-test/config/environment'], functi
       this.route('invitations');
       this.route('contacts');
       this.route('contact');
+      this.route('editMensagem', { path: '/:Mensagem_id/editMensagem' });
+      this.route('editInvitations', { path: '/:invitation_id/editInvitations' });
     });
 
     this.route('libraries', function () {
@@ -398,6 +400,92 @@ define('ember-test/routes/admin/contact', ['exports'], function (exports) {
   exports.default = Ember.Route.extend({
     model: function model() {
       return this.store.findAll('Mensagem');
+    },
+
+
+    actions: {
+      deleteMensagem: function deleteMensagem(Mensagem) {
+        var confirmation = confirm('Têm certeza?');
+
+        if (confirmation) {
+          Mensagem.destroyRecord();
+        }
+      }
+    }
+
+  });
+});
+define('ember-test/routes/admin/edit-invitations', ['exports'], function (exports) {
+  'use strict';
+
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.default = Ember.Route.extend({
+    model: function model(params) {
+      return this.store.findRecord('Invitation', params.invitation_id);
+    },
+
+
+    actions: {
+      saveInvitation: function saveInvitation(Invitation) {
+        var _this = this;
+
+        Invitation.save().then(function () {
+          return _this.transitionTo('admin.contact');
+        });
+      },
+      willTransition: function willTransition(transition) {
+
+        var model = this.controller.get('model');
+
+        if (model.get('hasDirtyAttributes')) {
+          var confirmation = confirm("Você ainda não salvou. Tem certeza que quer sair?");
+
+          if (confirmation) {
+            model.rollbackAttributes();
+          } else {
+            transition.abort();
+          }
+        }
+      }
+    }
+  });
+});
+define('ember-test/routes/admin/edit-mensagem', ['exports'], function (exports) {
+  'use strict';
+
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.default = Ember.Route.extend({
+    model: function model(params) {
+      return this.store.findRecord('Mensagem', params.Mensagem_id);
+    },
+
+
+    actions: {
+      saveMensagem: function saveMensagem(Mensagem) {
+        var _this = this;
+
+        Mensagem.save().then(function () {
+          return _this.transitionTo('admin.contact');
+        });
+      },
+      willTransition: function willTransition(transition) {
+
+        var model = this.controller.get('model');
+
+        if (model.get('hasDirtyAttributes')) {
+          var confirmation = confirm("Você ainda não salvou. Tem certeza que quer sair?");
+
+          if (confirmation) {
+            model.rollbackAttributes();
+          } else {
+            transition.abort();
+          }
+        }
+      }
     }
   });
 });
@@ -410,6 +498,17 @@ define('ember-test/routes/admin/invitations', ['exports'], function (exports) {
   exports.default = Ember.Route.extend({
     model: function model() {
       return this.store.findAll('invitation');
+    },
+
+
+    actions: {
+      deleteInvitation: function deleteInvitation(invitation) {
+        var confirmation = confirm('Are you sure?');
+
+        if (confirmation) {
+          invitation.destroyRecord();
+        }
+      }
     }
   });
 });
@@ -555,7 +654,23 @@ define("ember-test/templates/admin/contact", ["exports"], function (exports) {
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
-  exports.default = Ember.HTMLBars.template({ "id": "UCjix3JD", "block": "{\"statements\":[[4,\" app/templates/admin/invitations.hbs \"],[0,\"\\n\\n\"],[11,\"h1\",[]],[13],[0,\"Mensagems\"],[14],[0,\"\\n\\n\"],[11,\"table\",[]],[15,\"class\",\"table table-bordered table-striped\"],[13],[0,\"\\n  \"],[11,\"thead\",[]],[13],[0,\"\\n    \"],[11,\"tr\",[]],[13],[0,\"\\n      \"],[11,\"th\",[]],[13],[0,\"ID\"],[14],[0,\"\\n      \"],[11,\"th\",[]],[13],[0,\"E-mail\"],[14],[0,\"\\n      \"],[11,\"th\",[]],[13],[0,\"Mensagem\"],[14],[0,\"\\n    \"],[14],[0,\"\\n  \"],[14],[0,\"\\n  \"],[11,\"tbody\",[]],[13],[0,\"\\n\"],[6,[\"each\"],[[28,[\"model\"]]],null,{\"statements\":[[0,\"    \"],[11,\"tr\",[]],[13],[0,\"\\n      \"],[11,\"th\",[]],[13],[1,[28,[\"Mensagem\",\"id\"]],false],[14],[0,\"\\n      \"],[11,\"td\",[]],[13],[1,[28,[\"Mensagem\",\"email\"]],false],[14],[0,\"\\n      \"],[11,\"td\",[]],[13],[1,[28,[\"Mensagem\",\"contato\"]],false],[14],[0,\"\\n    \"],[14],[0,\"\\n\"]],\"locals\":[\"Mensagem\"]},null],[0,\"  \"],[14],[0,\"\\n\"],[14]],\"locals\":[],\"named\":[],\"yields\":[],\"hasPartials\":false}", "meta": { "moduleName": "ember-test/templates/admin/contact.hbs" } });
+  exports.default = Ember.HTMLBars.template({ "id": "LQ1SKAUX", "block": "{\"statements\":[[4,\" app/templates/admin/contact.hbs \"],[0,\"\\n\\n\"],[11,\"h1\",[]],[13],[0,\"Mensagens\"],[14],[0,\"\\n\\n\"],[11,\"table\",[]],[15,\"class\",\"table table-bordered table-striped\"],[13],[0,\"\\n  \"],[11,\"thead\",[]],[13],[0,\"\\n    \"],[11,\"tr\",[]],[13],[0,\"\\n      \"],[11,\"th\",[]],[13],[0,\"ID\"],[14],[0,\"\\n      \"],[11,\"th\",[]],[13],[0,\"E-mail\"],[14],[0,\"\\n      \"],[11,\"th\",[]],[13],[0,\"Mensagem\"],[14],[0,\"\\n      \"],[11,\"th\",[]],[13],[0,\"Editar\"],[14],[0,\"\\n      \"],[11,\"th\",[]],[13],[0,\"Excluir\"],[14],[0,\"\\n    \"],[14],[0,\"\\n  \"],[14],[0,\"\\n  \"],[11,\"tbody\",[]],[13],[0,\"\\n\"],[6,[\"each\"],[[28,[\"model\"]]],null,{\"statements\":[[0,\"    \"],[11,\"tr\",[]],[13],[0,\"\\n      \"],[11,\"th\",[]],[13],[1,[28,[\"Mensagem\",\"id\"]],false],[14],[0,\"\\n      \"],[11,\"td\",[]],[13],[1,[28,[\"Mensagem\",\"email\"]],false],[14],[0,\"\\n      \"],[11,\"td\",[]],[13],[1,[28,[\"Mensagem\",\"contato\"]],false],[14],[0,\"\\n      \"],[11,\"td\",[]],[13],[6,[\"link-to\"],[\"admin.editMensagem\",[28,[\"Mensagem\",\"id\"]]],[[\"class\"],[\"btn btn-success btn-xs\"]],{\"statements\":[[0,\"Editar\"]],\"locals\":[]},null],[14],[0,\"\\n      \"],[11,\"td\",[]],[13],[11,\"button\",[]],[15,\"class\",\"btn btn-danger btn-xs\"],[5,[\"action\"],[[28,[null]],\"deleteMensagem\",[28,[\"Mensagem\"]]]],[13],[0,\"Excluir\"],[14],[14],[0,\"\\n    \"],[14],[0,\"\\n\"]],\"locals\":[\"Mensagem\"]},null],[0,\"  \"],[14],[0,\"\\n\"],[14]],\"locals\":[],\"named\":[],\"yields\":[],\"hasPartials\":false}", "meta": { "moduleName": "ember-test/templates/admin/contact.hbs" } });
+});
+define("ember-test/templates/admin/edit-invitations", ["exports"], function (exports) {
+  "use strict";
+
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.default = Ember.HTMLBars.template({ "id": "gOBfSB1X", "block": "{\"statements\":[[11,\"h2\",[]],[13],[0,\"Editar Invitation\"],[14],[0,\"\\n\\n\"],[11,\"div\",[]],[15,\"class\",\"form-horizontal\"],[13],[0,\"\\n  \"],[11,\"div\",[]],[15,\"class\",\"form-group\"],[13],[0,\"\\n    \"],[11,\"label\",[]],[15,\"class\",\"col-sm-2 control-label\"],[13],[0,\"E-mail\"],[14],[0,\"\\n    \"],[11,\"div\",[]],[15,\"class\",\"col-sm-10\"],[13],[0,\"\\n      \"],[1,[33,[\"input\"],null,[[\"type\",\"value\",\"class\",\"placeholder\"],[\"text\",[28,[\"model\",\"email\"]],\"form-control\",\"E-mail\"]]],false],[0,\"\\n    \"],[14],[0,\"\\n  \"],[14],[0,\"\\n  \"],[11,\"div\",[]],[15,\"class\",\"form-group\"],[13],[0,\"\\n    \"],[11,\"div\",[]],[15,\"class\",\"col-sm-offset-2 col-sm-10\"],[13],[0,\"\\n      \"],[11,\"button\",[]],[15,\"type\",\"submit\"],[15,\"class\",\"btn btn-default\"],[5,[\"action\"],[[28,[null]],\"saveInvitation\",[28,[\"model\"]]]],[13],[0,\"Save changes\"],[14],[0,\"\\n    \"],[14],[0,\"\\n  \"],[14],[0,\"\\n\"],[14],[0,\"\\n\"]],\"locals\":[],\"named\":[],\"yields\":[],\"hasPartials\":false}", "meta": { "moduleName": "ember-test/templates/admin/edit-invitations.hbs" } });
+});
+define("ember-test/templates/admin/edit-mensagem", ["exports"], function (exports) {
+  "use strict";
+
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.default = Ember.HTMLBars.template({ "id": "sm+T98m9", "block": "{\"statements\":[[11,\"h2\",[]],[13],[0,\"Editar Mensagem\"],[14],[0,\"\\n\\n\"],[11,\"div\",[]],[15,\"class\",\"form-horizontal\"],[13],[0,\"\\n  \"],[11,\"div\",[]],[15,\"class\",\"form-group\"],[13],[0,\"\\n    \"],[11,\"label\",[]],[15,\"class\",\"col-sm-2 control-label\"],[13],[0,\"E-mail\"],[14],[0,\"\\n    \"],[11,\"div\",[]],[15,\"class\",\"col-sm-10\"],[13],[0,\"\\n      \"],[1,[33,[\"input\"],null,[[\"type\",\"value\",\"class\",\"placeholder\"],[\"text\",[28,[\"model\",\"email\"]],\"form-control\",\"E-mail\"]]],false],[0,\"\\n    \"],[14],[0,\"\\n  \"],[14],[0,\"\\n  \"],[11,\"div\",[]],[15,\"class\",\"form-group\"],[13],[0,\"\\n    \"],[11,\"label\",[]],[15,\"class\",\"col-sm-2 control-label\"],[13],[0,\"Mensagem\"],[14],[0,\"\\n    \"],[11,\"div\",[]],[15,\"class\",\"col-sm-10\"],[13],[0,\"\\n      \"],[1,[33,[\"input\"],null,[[\"type\",\"value\",\"class\",\"placeholder\"],[\"text\",[28,[\"model\",\"contato\"]],\"form-control\",\"Mensagem\"]]],false],[0,\"\\n    \"],[14],[0,\"\\n  \"],[14],[0,\"\\n  \"],[11,\"div\",[]],[15,\"class\",\"form-group\"],[13],[0,\"\\n    \"],[11,\"div\",[]],[15,\"class\",\"col-sm-offset-2 col-sm-10\"],[13],[0,\"\\n      \"],[11,\"button\",[]],[15,\"type\",\"submit\"],[15,\"class\",\"btn btn-default\"],[5,[\"action\"],[[28,[null]],\"saveMensagem\",[28,[\"model\"]]]],[13],[0,\"Save changes\"],[14],[0,\"\\n    \"],[14],[0,\"\\n  \"],[14],[0,\"\\n\"],[14],[0,\"\\n\"]],\"locals\":[],\"named\":[],\"yields\":[],\"hasPartials\":false}", "meta": { "moduleName": "ember-test/templates/admin/edit-mensagem.hbs" } });
 });
 define("ember-test/templates/admin/invitations", ["exports"], function (exports) {
   "use strict";
@@ -563,7 +678,7 @@ define("ember-test/templates/admin/invitations", ["exports"], function (exports)
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
-  exports.default = Ember.HTMLBars.template({ "id": "jtF5Wh8N", "block": "{\"statements\":[[4,\" app/templates/admin/invitations.hbs \"],[0,\"\\n\\n\"],[11,\"h1\",[]],[13],[0,\"Invitations\"],[14],[0,\"\\n\\n\"],[11,\"table\",[]],[15,\"class\",\"table table-bordered table-striped\"],[13],[0,\"\\n  \"],[11,\"thead\",[]],[13],[0,\"\\n    \"],[11,\"tr\",[]],[13],[0,\"\\n      \"],[11,\"th\",[]],[13],[0,\"ID\"],[14],[0,\"\\n      \"],[11,\"th\",[]],[13],[0,\"E-mail\"],[14],[0,\"\\n    \"],[14],[0,\"\\n  \"],[14],[0,\"\\n  \"],[11,\"tbody\",[]],[13],[0,\"\\n\"],[6,[\"each\"],[[28,[\"model\"]]],null,{\"statements\":[[0,\"    \"],[11,\"tr\",[]],[13],[0,\"\\n      \"],[11,\"th\",[]],[13],[1,[28,[\"invitation\",\"id\"]],false],[14],[0,\"\\n      \"],[11,\"td\",[]],[13],[1,[28,[\"invitation\",\"email\"]],false],[14],[0,\"\\n    \"],[14],[0,\"\\n\"]],\"locals\":[\"invitation\"]},null],[0,\"  \"],[14],[0,\"\\n\"],[14]],\"locals\":[],\"named\":[],\"yields\":[],\"hasPartials\":false}", "meta": { "moduleName": "ember-test/templates/admin/invitations.hbs" } });
+  exports.default = Ember.HTMLBars.template({ "id": "megAHYCQ", "block": "{\"statements\":[[4,\" app/templates/admin/invitations.hbs \"],[0,\"\\n\\n\"],[11,\"h1\",[]],[13],[0,\"Invitations\"],[14],[0,\"\\n\\n\"],[11,\"table\",[]],[15,\"class\",\"table table-bordered table-striped\"],[13],[0,\"\\n  \"],[11,\"thead\",[]],[13],[0,\"\\n    \"],[11,\"tr\",[]],[13],[0,\"\\n      \"],[11,\"th\",[]],[13],[0,\"ID\"],[14],[0,\"\\n      \"],[11,\"th\",[]],[13],[0,\"E-mail\"],[14],[0,\"\\n      \"],[11,\"th\",[]],[13],[0,\"Editar\"],[14],[0,\"\\n      \"],[11,\"th\",[]],[13],[0,\"Excluir\"],[14],[0,\"\\n    \"],[14],[0,\"\\n  \"],[14],[0,\"\\n  \"],[11,\"tbody\",[]],[13],[0,\"\\n\"],[6,[\"each\"],[[28,[\"model\"]]],null,{\"statements\":[[0,\"    \"],[11,\"tr\",[]],[13],[0,\"\\n      \"],[11,\"th\",[]],[13],[1,[28,[\"invitation\",\"id\"]],false],[14],[0,\"\\n      \"],[11,\"td\",[]],[13],[1,[28,[\"invitation\",\"email\"]],false],[14],[0,\"\\n      \"],[11,\"td\",[]],[13],[6,[\"link-to\"],[\"admin.editInvitations\",[28,[\"invitation\",\"id\"]]],[[\"class\"],[\"btn btn-success btn-xs\"]],{\"statements\":[[0,\"Edit\"]],\"locals\":[]},null],[14],[0,\"\\n      \"],[11,\"td\",[]],[13],[11,\"button\",[]],[15,\"class\",\"btn btn-danger btn-xs\"],[5,[\"action\"],[[28,[null]],\"deleteInvitation\",[28,[\"invitation\"]]]],[13],[0,\"Delete\"],[14],[14],[0,\"\\n    \"],[14],[0,\"\\n\"]],\"locals\":[\"invitation\"]},null],[0,\"  \"],[14],[0,\"\\n\"],[14]],\"locals\":[],\"named\":[],\"yields\":[],\"hasPartials\":false}", "meta": { "moduleName": "ember-test/templates/admin/invitations.hbs" } });
 });
 define("ember-test/templates/application", ["exports"], function (exports) {
   "use strict";
@@ -659,6 +774,6 @@ catch(err) {
 });
 
 if (!runningTests) {
-  require("ember-test/app")["default"].create({"LOG_ACTIVE_GENERATION":true,"LOG_TRANSITIONS":true,"LOG_TRANSITIONS_INTERNAL":true,"LOG_VIEW_LOOKUPS":true,"name":"ember-test","version":"0.0.0+0effc2d7"});
+  require("ember-test/app")["default"].create({"LOG_ACTIVE_GENERATION":true,"LOG_TRANSITIONS":true,"LOG_TRANSITIONS_INTERNAL":true,"LOG_VIEW_LOOKUPS":true,"name":"ember-test","version":"0.0.0+6253f9b6"});
 }
 //# sourceMappingURL=ember-test.map

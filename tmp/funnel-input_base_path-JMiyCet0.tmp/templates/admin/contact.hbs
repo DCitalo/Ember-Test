@@ -1,0 +1,26 @@
+<!-- app/templates/admin/contact.hbs -->
+
+<h1>Mensagens</h1>
+
+<table class="table table-bordered table-striped">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>E-mail</th>
+      <th>Mensagem</th>
+      <th>Editar</th>
+      <th>Excluir</th>
+    </tr>
+  </thead>
+  <tbody>
+  {{#each model as |Mensagem|}}
+    <tr>
+      <th>{{Mensagem.id}}</th>
+      <td>{{Mensagem.email}}</td>
+      <td>{{Mensagem.contato}}</td>
+      <td>{{#link-to 'admin.editMensagem' Mensagem.id class='btn btn-success btn-xs'}}Editar{{/link-to}}</td>
+      <td><button class="btn btn-danger btn-xs" {{action 'deleteMensagem' Mensagem}}>Excluir</button></td>
+    </tr>
+  {{/each}}
+  </tbody>
+</table>
