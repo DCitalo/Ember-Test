@@ -7,7 +7,6 @@ const Router = Ember.Router.extend({
 });
 
 Router.map(function() {
-
   this.route('about');
   this.route('contact');
 
@@ -25,6 +24,8 @@ Router.map(function() {
     this.route('edit', { path: '/:library_id/edit' });
     this.route('form');
   });
+  this.route('authors');
+  this.route('books');
 });
 
 export default Router;
