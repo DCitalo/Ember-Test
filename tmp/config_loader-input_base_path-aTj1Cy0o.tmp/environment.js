@@ -37,7 +37,11 @@ module.exports = function(environment) {
       // when it is created
     }
   };
-
+  if (environment === 'production') {
+    ENV['ember-faker'] = {
+      enabled: true
+    };
+  }
   if (environment === 'development') {
     // ENV.APP.LOG_RESOLVER = true;
      ENV.APP.LOG_ACTIVE_GENERATION = true;

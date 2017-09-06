@@ -17,6 +17,7 @@ Router.map(function() {
     this.route('contact');
     this.route('editMensagem', { path: '/:Mensagem_id/editMensagem' });
     this.route('editInvitations', { path: '/:invitation_id/editInvitations' });
+    this.route('seeder');
   });
 
   this.route('libraries', function() {

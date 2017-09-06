@@ -1,0 +1,6 @@
+{
+  "name": "ember-test",
+  "dependencies": {
+    "Faker": "^4.1.0"
+  }
+}

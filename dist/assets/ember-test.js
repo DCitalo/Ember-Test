@@ -28,6 +28,42 @@ define('ember-test/app', ['exports', 'ember-test/resolver', 'ember-load-initiali
 
   exports.default = App;
 });
+define('ember-test/components/fader-label', ['exports'], function (exports) {
+  'use strict';
+
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.default = Ember.Component.extend({
+    tagName: 'span',
+
+    classNames: ['label label-success label-fade'],
+    classNameBindings: ['isShowing:label-show'],
+
+    isShowing: false,
+
+    isShowingChanged: Ember.observer('isShowing', function () {
+      var _this = this;
+
+      // User can navigate away from this page in less than 3 seconds, so this component will be destroyed,
+      // however our "setTimeout" task try to run.
+      // We save this task in a local variable, so it can be cleaned up during the destroy process.
+      // Otherwise you will see a "calling set on destroyed object" error.
+      this._runLater = Ember.run.later(function () {
+        return _this.set('isShowing', false);
+      }, 3000);
+    }),
+
+    resetRunLater: function resetRunLater() {
+      this.set('isShowing', false);
+      Ember.run.cancel(this._runLater);
+    },
+    willDestroy: function willDestroy() {
+      this.resetRunLater();
+      this._super.apply(this, arguments);
+    }
+  });
+});
 define('ember-test/components/library-item-form', ['exports'], function (exports) {
   'use strict';
 
@@ -62,6 +98,59 @@ define('ember-test/components/nav-link-to', ['exports'], function (exports) {
     tagName: 'li'
   });
 });
+define('ember-test/components/number-box', ['exports'], function (exports) {
+  'use strict';
+
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.default = Ember.Component.extend({
+
+    classNames: ['panel', 'panel-warning']
+
+  });
+});
+define('ember-test/components/seeder-block', ['exports'], function (exports) {
+  'use strict';
+
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+
+
+  var MAX_VALUE = 100;
+
+  exports.default = Ember.Component.extend({
+
+    counter: null,
+
+    isCounterValid: Ember.computed.lte('counter', MAX_VALUE),
+    isCounterNotValid: Ember.computed.not('isCounterValid'),
+    placeholder: 'Max ' + MAX_VALUE,
+
+    generateReady: false,
+    deleteReady: false,
+
+    generateInProgress: false,
+    deleteInProgress: false,
+
+    generateIsDisabled: Ember.computed.or('isCounterNotValid', 'generateInProgress', 'deleteInProgress'),
+    deleteIsDisabled: Ember.computed.or('generateInProgress', 'deleteInProgress'),
+
+    actions: {
+      generateAction: function generateAction() {
+        if (this.get('isCounterValid')) {
+
+          // Action up to Seeder Controller with the requested amount
+          this.sendAction('generateAction', this.get('counter'));
+        }
+      },
+      deleteAction: function deleteAction() {
+        this.sendAction('deleteAction');
+      }
+    }
+  });
+});
 define('ember-test/components/welcome-page', ['exports', 'ember-welcome-page/components/welcome-page'], function (exports, _welcomePage) {
   'use strict';
 
@@ -72,6 +161,166 @@ define('ember-test/components/welcome-page', ['exports', 'ember-welcome-page/com
     enumerable: true,
     get: function () {
       return _welcomePage.default;
+    }
+  });
+});
+define('ember-test/controllers/admin/seeder', ['exports', 'faker'], function (exports, _faker) {
+  'use strict';
+
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.default = Ember.Controller.extend({
+
+    actions: {
+      generateLibraries: function generateLibraries(volume) {
+        var _this = this;
+
+        // Progress flag, data-down to seeder-block where our lovely button will show a spinner...
+        this.set('generateLibrariesInProgress', true);
+
+        var counter = parseInt(volume);
+        var savedLibraries = [];
+
+        for (var i = 0; i < counter; i++) {
+
+          // Collect all Promise in an array
+          savedLibraries.push(this._saveRandomLibrary());
+        }
+
+        // Wait for all Promise to fulfill so we can show our label and turn off the spinner.
+        Ember.RSVP.all(savedLibraries).then(function () {
+          _this.set('generateLibrariesInProgress', false);
+          _this.set('libDone', true);
+        });
+      },
+      deleteLibraries: function deleteLibraries() {
+        var _this2 = this;
+
+        // Progress flag, data-down to seeder-block button spinner.
+        this.set('deleteLibrariesInProgress', true);
+
+        // Our local _destroyAll return a promise, we change the label when all records destroyed.
+        this._destroyAll(this.get('libraries'))
+
+        // Data down via seeder-block to fader-label that we ready to show the label.
+        // Change the progress indicator also, so the spinner can be turned off.
+        .then(function () {
+          _this2.set('libDelDone', true);
+          _this2.set('deleteLibrariesInProgress', false);
+        });
+      },
+      generateBooksAndAuthors: function generateBooksAndAuthors(volume) {
+        var _this3 = this;
+
+        // Progress flag, data-down to seeder-block button spinner.
+        this.set('generateBooksInProgress', true);
+
+        var counter = parseInt(volume);
+        var booksWithAuthors = [];
+
+        for (var i = 0; i < counter; i++) {
+
+          // Collect Promises in an array.
+          var books = this._saveRandomAuthor().then(function (newAuthor) {
+            return _this3._generateSomeBooks(newAuthor);
+          });
+          booksWithAuthors.push(books);
+        }
+
+        // Let's wait until all async save resolved, show a label and turn off the spinner.
+        Ember.RSVP.all(booksWithAuthors)
+
+        // Data down via seeder-block to fader-label that we ready to show the label
+        // Change the progress flag also, so the spinner can be turned off.
+        .then(function () {
+          _this3.set('authDone', true);
+          _this3.set('generateBooksInProgress', false);
+        });
+      },
+      deleteBooksAndAuthors: function deleteBooksAndAuthors() {
+        var _this4 = this;
+
+        // Progress flag, data-down to seeder-block button to show spinner.
+        this.set('deleteBooksInProgress', true);
+
+        var authors = this.get('authors');
+        var books = this.get('books');
+
+        // Remove authors first and books later, finally show the label.
+        this._destroyAll(authors).then(function () {
+          return _this4._destroyAll(books);
+        })
+
+        // Data down via seeder-block to fader-label that we ready to show the label
+        // Delete is finished, we can turn off the spinner in seeder-block button.
+        .then(function () {
+          _this4.set('authDelDone', true);
+          _this4.set('deleteBooksInProgress', false);
+        });
+      }
+    },
+
+    // Private methods
+
+    // Create a new library record and uses the randomizator, which is in our model and generates some fake data in
+    // the new record. After we save it, which is a promise, so this returns a promise.
+    _saveRandomLibrary: function _saveRandomLibrary() {
+      return this.store.createRecord('library').randomize().save();
+    },
+    _saveRandomAuthor: function _saveRandomAuthor() {
+      return this.store.createRecord('author').randomize().save();
+    },
+    _generateSomeBooks: function _generateSomeBooks(author) {
+      var _this5 = this;
+
+      var bookCounter = _faker.default.random.number(10);
+      var books = [];
+
+      var _loop = function _loop(j) {
+        var library = _this5._selectRandomLibrary();
+
+        // Creating and saving book, saving the related records also are take while, they are all a Promise.
+        var bookPromise = _this5.store.createRecord('book').randomize(author, library).save().then(function () {
+          return author.save();
+        })
+
+        // guard library in case if we don't have any
+        .then(function () {
+          return library && library.save();
+        });
+        books.push(bookPromise);
+      };
+
+      for (var j = 0; j < bookCounter; j++) {
+        _loop(j);
+      }
+
+      // Return a Promise, so we can manage the whole process on time
+      return Ember.RSVP.all(books);
+    },
+    _selectRandomLibrary: function _selectRandomLibrary() {
+
+      // Please note libraries are records from store, which means this is a DS.RecordArray object, it is extended from
+      // Ember.ArrayProxy. If you need an element from this list, you cannot just use libraries[3], we have to use
+      // libraries.objectAt(3)
+      var libraries = this.get('libraries');
+      var size = libraries.get('length');
+
+      // Get a random number between 0 and size-1
+      var randomItem = _faker.default.random.number(size - 1);
+      return libraries.objectAt(randomItem);
+    },
+    _destroyAll: function _destroyAll(records) {
+
+      // destroyRecord() is a Promise and will be fulfilled when the backend database is confirmed the delete
+      // lets collect these Promises in an array
+      var recordsAreDestroying = records.map(function (item) {
+        return item.destroyRecord();
+      });
+
+      // Wrap all Promise in one common Promise, RSVP.all is our best friend in this process. ;)
+      return Ember.RSVP.all(recordsAreDestroying);
     }
   });
 });
@@ -238,6 +487,22 @@ define('ember-test/initializers/ember-data', ['exports', 'ember-data/setup-conta
     initialize: _setupContainer.default
   };
 });
+define('ember-test/initializers/ember-faker', ['exports'], function (exports) {
+  'use strict';
+
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.initialize = initialize;
+  function initialize() /* container, application */{
+    // application.inject('route', 'foo', 'service:foo');
+  };
+
+  exports.default = {
+    name: 'ember-faker',
+    initialize: initialize
+  };
+});
 define('ember-test/initializers/emberfire', ['exports', 'emberfire/initializers/emberfire'], function (exports, _emberfire) {
   'use strict';
 
@@ -343,6 +608,58 @@ define("ember-test/instance-initializers/ember-data", ["exports", "ember-data/in
     initialize: _initializeStoreService.default
   };
 });
+define('ember-test/models/author', ['exports', 'ember-data', 'faker'], function (exports, _emberData, _faker) {
+  'use strict';
+
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.default = _emberData.default.Model.extend({
+
+    name: _emberData.default.attr('string'),
+    books: _emberData.default.hasMany('book', { inverse: 'author', async: true }),
+
+    isNotValid: Ember.computed.empty('name'),
+
+    randomize: function randomize() {
+      this.set('name', _faker.default.name.findName());
+      return this;
+    }
+  });
+});
+define('ember-test/models/book', ['exports', 'ember-data', 'faker'], function (exports, _emberData, _faker) {
+  'use strict';
+
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.default = _emberData.default.Model.extend({
+
+    title: _emberData.default.attr('string'),
+    releaseYear: _emberData.default.attr('date'),
+
+    author: _emberData.default.belongsTo('author', { inverse: 'books', async: true }),
+    library: _emberData.default.belongsTo('library', { inverse: 'books', async: true }),
+
+    randomize: function randomize(author, library) {
+      this.set('title', this._bookTitle());
+      this.set('author', author);
+      this.set('releaseYear', this._randomYear());
+      this.set('library', library);
+
+      return this;
+    },
+    _bookTitle: function _bookTitle() {
+      return _faker.default.commerce.productName() + ' Cookbook';
+    },
+    _randomYear: function _randomYear() {
+      return new Date(this._getRandomArbitrary(1900, 2015).toPrecision(4));
+    },
+    _getRandomArbitrary: function _getRandomArbitrary(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+  });
+});
 define('ember-test/models/invitation', ['exports', 'ember-data'], function (exports, _emberData) {
   'use strict';
 
@@ -353,7 +670,7 @@ define('ember-test/models/invitation', ['exports', 'ember-data'], function (expo
     email: _emberData.default.attr('string')
   });
 });
-define('ember-test/models/library', ['exports', 'ember-data'], function (exports, _emberData) {
+define('ember-test/models/library', ['exports', 'ember-data', 'faker'], function (exports, _emberData, _faker) {
   'use strict';
 
   Object.defineProperty(exports, "__esModule", {
@@ -365,7 +682,21 @@ define('ember-test/models/library', ['exports', 'ember-data'], function (exports
     address: _emberData.default.attr('string'),
     phone: _emberData.default.attr('string'),
 
-    isValid: Ember.computed.notEmpty('name')
+    books: _emberData.default.hasMany('book', { inverse: 'library', async: true }),
+
+    isValid: Ember.computed.notEmpty('name'),
+
+    randomize: function randomize() {
+      this.set('name', _faker.default.company.companyName() + ' Library');
+      this.set('address', this._fullAddress());
+      this.set('phone', _faker.default.phone.phoneNumber());
+
+      // If you would like to use in chain.
+      return this;
+    },
+    _fullAddress: function _fullAddress() {
+      return _faker.default.address.streetAddress() + ', ' + _faker.default.address.city();
+    }
   });
 });
 define('ember-test/models/mensagem', ['exports', 'ember-data'], function (exports, _emberData) {
@@ -410,6 +741,7 @@ define('ember-test/router', ['exports', 'ember-test/config/environment'], functi
       this.route('contact');
       this.route('editMensagem', { path: '/:Mensagem_id/editMensagem' });
       this.route('editInvitations', { path: '/:invitation_id/editInvitations' });
+      this.route('seeder');
     });
 
     this.route('libraries', function () {
@@ -547,6 +879,29 @@ define('ember-test/routes/admin/invitations', ['exports'], function (exports) {
           invitation.destroyRecord();
         }
       }
+    }
+  });
+});
+define('ember-test/routes/admin/seeder', ['exports'], function (exports) {
+  'use strict';
+
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.default = Ember.Route.extend({
+    model: function model() {
+      return Ember.RSVP.hash({
+        libraries: this.store.findAll('library'),
+        books: this.store.findAll('book'),
+        authors: this.store.findAll('author')
+      });
+    },
+    setupController: function setupController(controller, model) {
+      controller.set('libraries', model.libraries);
+      controller.set('books', model.books);
+      controller.set('authors', model.authors);
+
+      this._super(controller, model);
     }
   });
 });
@@ -746,6 +1101,14 @@ define("ember-test/templates/admin/invitations", ["exports"], function (exports)
   });
   exports.default = Ember.HTMLBars.template({ "id": "megAHYCQ", "block": "{\"statements\":[[4,\" app/templates/admin/invitations.hbs \"],[0,\"\\n\\n\"],[11,\"h1\",[]],[13],[0,\"Invitations\"],[14],[0,\"\\n\\n\"],[11,\"table\",[]],[15,\"class\",\"table table-bordered table-striped\"],[13],[0,\"\\n  \"],[11,\"thead\",[]],[13],[0,\"\\n    \"],[11,\"tr\",[]],[13],[0,\"\\n      \"],[11,\"th\",[]],[13],[0,\"ID\"],[14],[0,\"\\n      \"],[11,\"th\",[]],[13],[0,\"E-mail\"],[14],[0,\"\\n      \"],[11,\"th\",[]],[13],[0,\"Editar\"],[14],[0,\"\\n      \"],[11,\"th\",[]],[13],[0,\"Excluir\"],[14],[0,\"\\n    \"],[14],[0,\"\\n  \"],[14],[0,\"\\n  \"],[11,\"tbody\",[]],[13],[0,\"\\n\"],[6,[\"each\"],[[28,[\"model\"]]],null,{\"statements\":[[0,\"    \"],[11,\"tr\",[]],[13],[0,\"\\n      \"],[11,\"th\",[]],[13],[1,[28,[\"invitation\",\"id\"]],false],[14],[0,\"\\n      \"],[11,\"td\",[]],[13],[1,[28,[\"invitation\",\"email\"]],false],[14],[0,\"\\n      \"],[11,\"td\",[]],[13],[6,[\"link-to\"],[\"admin.editInvitations\",[28,[\"invitation\",\"id\"]]],[[\"class\"],[\"btn btn-success btn-xs\"]],{\"statements\":[[0,\"Edit\"]],\"locals\":[]},null],[14],[0,\"\\n      \"],[11,\"td\",[]],[13],[11,\"button\",[]],[15,\"class\",\"btn btn-danger btn-xs\"],[5,[\"action\"],[[28,[null]],\"deleteInvitation\",[28,[\"invitation\"]]]],[13],[0,\"Delete\"],[14],[14],[0,\"\\n    \"],[14],[0,\"\\n\"]],\"locals\":[\"invitation\"]},null],[0,\"  \"],[14],[0,\"\\n\"],[14]],\"locals\":[],\"named\":[],\"yields\":[],\"hasPartials\":false}", "meta": { "moduleName": "ember-test/templates/admin/invitations.hbs" } });
 });
+define("ember-test/templates/admin/seeder", ["exports"], function (exports) {
+  "use strict";
+
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.default = Ember.HTMLBars.template({ "id": "ZipOgwqv", "block": "{\"statements\":[[4,\" app/templates/admin/seeder.hbs \"],[0,\"\\n\"],[11,\"h1\",[]],[13],[0,\"Seeder, our Data Center\"],[14],[0,\"\\n\\n\"],[11,\"div\",[]],[15,\"class\",\"row\"],[13],[0,\"\\n \"],[11,\"div\",[]],[15,\"class\",\"col-md-4\"],[13],[1,[33,[\"number-box\"],null,[[\"title\",\"number\"],[\"Libraries\",[28,[\"libraries\",\"length\"]]]]],false],[14],[0,\"\\n \"],[11,\"div\",[]],[15,\"class\",\"col-md-4\"],[13],[1,[33,[\"number-box\"],null,[[\"title\",\"number\"],[\"Authors\",[28,[\"authors\",\"length\"]]]]],false],[14],[0,\"\\n \"],[11,\"div\",[]],[15,\"class\",\"col-md-4\"],[13],[1,[33,[\"number-box\"],null,[[\"title\",\"number\"],[\"Books\",[28,[\"books\",\"length\"]]]]],false],[14],[0,\"\\n\"],[14],[0,\"\\n\\n\"],[1,[33,[\"seeder-block\"],null,[[\"sectionTitle\",\"generateAction\",\"deleteAction\",\"generateReady\",\"deleteReady\",\"generateInProgress\",\"deleteInProgress\"],[\"Libraries\",\"generateLibraries\",\"deleteLibraries\",[28,[\"libDone\"]],[28,[\"libDelDone\"]],[28,[\"generateLibrariesInProgress\"]],[28,[\"deleteLibrariesInProgress\"]]]]],false],[0,\"\\n\\n\"],[1,[33,[\"seeder-block\"],null,[[\"sectionTitle\",\"generateAction\",\"deleteAction\",\"generateReady\",\"deleteReady\",\"generateInProgress\",\"deleteInProgress\"],[\"Authors with Books\",\"generateBooksAndAuthors\",\"deleteBooksAndAuthors\",[28,[\"authDone\"]],[28,[\"authDelDone\"]],[28,[\"generateBooksInProgress\"]],[28,[\"deleteBooksInProgress\"]]]]],false]],\"locals\":[],\"named\":[],\"yields\":[],\"hasPartials\":false}", "meta": { "moduleName": "ember-test/templates/admin/seeder.hbs" } });
+});
 define("ember-test/templates/application", ["exports"], function (exports) {
   "use strict";
 
@@ -753,6 +1116,14 @@ define("ember-test/templates/application", ["exports"], function (exports) {
     value: true
   });
   exports.default = Ember.HTMLBars.template({ "id": "Iia1+1NY", "block": "{\"statements\":[[11,\"div\",[]],[15,\"class\",\"container\"],[13],[0,\"\\n  \"],[19,\"navbar\"],[0,\"\\n  \"],[1,[26,[\"outlet\"]],false],[0,\"\\n\"],[14]],\"locals\":[],\"named\":[],\"yields\":[],\"hasPartials\":true}", "meta": { "moduleName": "ember-test/templates/application.hbs" } });
+});
+define("ember-test/templates/components/fader-label", ["exports"], function (exports) {
+  "use strict";
+
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.default = Ember.HTMLBars.template({ "id": "Dg1Z408u", "block": "{\"statements\":[[4,\" app/templates/components/fader-label.hbs \"],[0,\"\\n\"],[18,\"default\"]],\"locals\":[],\"named\":[],\"yields\":[\"default\"],\"hasPartials\":false}", "meta": { "moduleName": "ember-test/templates/components/fader-label.hbs" } });
 });
 define("ember-test/templates/components/library-item-form", ["exports"], function (exports) {
   "use strict";
@@ -778,6 +1149,22 @@ define("ember-test/templates/components/nav-link-to", ["exports"], function (exp
   });
   exports.default = Ember.HTMLBars.template({ "id": "6sz+V3N/", "block": "{\"statements\":[[4,\" app/templates/components/nav-link-to.hbs \"],[0,\"\\n\"],[11,\"a\",[]],[15,\"href\",\"\"],[13],[18,\"default\"],[14]],\"locals\":[],\"named\":[],\"yields\":[\"default\"],\"hasPartials\":false}", "meta": { "moduleName": "ember-test/templates/components/nav-link-to.hbs" } });
 });
+define("ember-test/templates/components/number-box", ["exports"], function (exports) {
+  "use strict";
+
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.default = Ember.HTMLBars.template({ "id": "yCz56r4t", "block": "{\"statements\":[[4,\" app/templates/components/number-box.hbs \"],[0,\"\\n\"],[11,\"div\",[]],[15,\"class\",\"panel-heading\"],[13],[0,\"\\n  \"],[11,\"h3\",[]],[15,\"class\",\"text-center\"],[13],[1,[26,[\"title\"]],false],[14],[0,\"\\n  \"],[11,\"h1\",[]],[15,\"class\",\"text-center\"],[13],[1,[33,[\"if\"],[[28,[\"number\"]],[28,[\"number\"]],\"...\"],null],false],[14],[0,\"\\n\"],[14]],\"locals\":[],\"named\":[],\"yields\":[],\"hasPartials\":false}", "meta": { "moduleName": "ember-test/templates/components/number-box.hbs" } });
+});
+define("ember-test/templates/components/seeder-block", ["exports"], function (exports) {
+  "use strict";
+
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.default = Ember.HTMLBars.template({ "id": "SWM2GOxA", "block": "{\"statements\":[[4,\" app/templates/components/seeder-block.hbs \"],[0,\"\\n\"],[11,\"div\",[]],[15,\"class\",\"well well-sm extra-padding-bottom\"],[13],[0,\"\\n  \"],[11,\"h3\",[]],[13],[1,[26,[\"sectionTitle\"]],false],[14],[0,\"\\n  \\n  \"],[11,\"div\",[]],[15,\"class\",\"form-inline\"],[13],[0,\"\\n  \\n   \"],[11,\"div\",[]],[16,\"class\",[34,[\"form-group has-feedback \",[33,[\"unless\"],[[28,[\"isCounterValid\"]],\"has-error\"],null]]]],[13],[0,\"\\n     \"],[11,\"label\",[]],[15,\"class\",\"control-label\"],[13],[0,\"Number of new records:\"],[14],[0,\"\\n     \"],[1,[33,[\"input\"],null,[[\"value\",\"class\",\"placeholder\"],[[28,[\"counter\"]],\"form-control\",[28,[\"placeholder\"]]]]],false],[0,\"\\n   \"],[14],[0,\"\\n  \\n   \"],[11,\"button\",[]],[15,\"class\",\"btn btn-primary\"],[16,\"disabled\",[26,[\"generateIsDisabled\"]],null],[5,[\"action\"],[[28,[null]],\"generateAction\"]],[13],[0,\"\\n\"],[6,[\"if\"],[[28,[\"generateInProgress\"]]],null,{\"statements\":[[0,\"       \"],[11,\"span\",[]],[15,\"class\",\"glyphicon glyphicon-refresh spinning\"],[13],[14],[0,\" Generating...\\n\"]],\"locals\":[]},{\"statements\":[[0,\"       Generate \"],[1,[26,[\"sectionTitle\"]],false],[0,\"\\n\"]],\"locals\":[]}],[0,\"   \"],[14],[0,\"\\n   \"],[6,[\"fader-label\"],null,[[\"isShowing\"],[[28,[\"generateReady\"]]]],{\"statements\":[[0,\"Created!\"]],\"locals\":[]},null],[0,\"\\n  \\n   \"],[11,\"button\",[]],[15,\"class\",\"btn btn-danger\"],[16,\"disabled\",[26,[\"deleteIsDisabled\"]],null],[5,[\"action\"],[[28,[null]],\"deleteAction\"]],[13],[0,\"\\n\"],[6,[\"if\"],[[28,[\"deleteInProgress\"]]],null,{\"statements\":[[0,\"       \"],[11,\"span\",[]],[15,\"class\",\"glyphicon glyphicon-refresh spinning\"],[13],[14],[0,\" Deleting...\\n\"]],\"locals\":[]},{\"statements\":[[0,\"       Delete All \"],[1,[26,[\"sectionTitle\"]],false],[0,\"\\n\"]],\"locals\":[]}],[0,\"   \"],[14],[0,\"\\n   \"],[6,[\"fader-label\"],null,[[\"isShowing\"],[[28,[\"deleteReady\"]]]],{\"statements\":[[0,\"Deleted!\"]],\"locals\":[]},null],[0,\"\\n  \"],[14],[0,\"\\n\"],[14]],\"locals\":[],\"named\":[],\"yields\":[],\"hasPartials\":false}", "meta": { "moduleName": "ember-test/templates/components/seeder-block.hbs" } });
+});
 define("ember-test/templates/contact", ["exports"], function (exports) {
   "use strict";
 
@@ -802,6 +1189,14 @@ define("ember-test/templates/libraries", ["exports"], function (exports) {
   });
   exports.default = Ember.HTMLBars.template({ "id": "lSVJqhkP", "block": "{\"statements\":[[4,\" app/templates/libraries.hbs \"],[0,\"\\n\"],[11,\"h1\",[]],[13],[0,\"Libraries\"],[14],[0,\"\\n\\n\"],[11,\"div\",[]],[15,\"class\",\"well\"],[13],[0,\"\\n  \"],[11,\"ul\",[]],[15,\"class\",\"nav nav-pills\"],[13],[0,\"\\n    \"],[6,[\"nav-link-to\"],[\"libraries.index\"],null,{\"statements\":[[0,\"List all\"]],\"locals\":[]},null],[0,\"\\n    \"],[6,[\"nav-link-to\"],[\"libraries.new\"],null,{\"statements\":[[0,\"Add new\"]],\"locals\":[]},null],[0,\"\\n  \"],[14],[0,\"\\n\"],[14],[0,\"\\n\\n\"],[1,[26,[\"outlet\"]],false]],\"locals\":[],\"named\":[],\"yields\":[],\"hasPartials\":false}", "meta": { "moduleName": "ember-test/templates/libraries.hbs" } });
 });
+define("ember-test/templates/libraries/edit", ["exports"], function (exports) {
+  "use strict";
+
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.default = Ember.HTMLBars.template({ "id": "lDVu7GDl", "block": "{\"statements\":[[11,\"h2\",[]],[13],[0,\"Edit Library\"],[14],[0,\"\\n\\n\"],[11,\"div\",[]],[15,\"class\",\"row\"],[13],[0,\"\\n\\n  \"],[11,\"div\",[]],[15,\"class\",\"col-md-6\"],[13],[0,\"\\n    \"],[1,[33,[\"library-item-form\"],null,[[\"item\",\"buttonLabel\",\"action\"],[[28,[\"model\"]],\"Save changes\",\"saveLibrary\"]]],false],[0,\"\\n  \"],[14],[0,\"\\n\\n  \"],[11,\"div\",[]],[15,\"class\",\"col-md-4\"],[13],[0,\"\\n\"],[6,[\"library-item\"],null,[[\"item\"],[[28,[\"model\"]]]],{\"statements\":[[0,\"      \"],[11,\"br\",[]],[13],[14],[0,\"\\n\"]],\"locals\":[]},null],[0,\"  \"],[14],[0,\"\\n\\n\"],[14]],\"locals\":[],\"named\":[],\"yields\":[],\"hasPartials\":false}", "meta": { "moduleName": "ember-test/templates/libraries/edit.hbs" } });
+});
 define("ember-test/templates/libraries/form", ["exports"], function (exports) {
   "use strict";
 
@@ -824,7 +1219,7 @@ define("ember-test/templates/navbar", ["exports"], function (exports) {
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
-  exports.default = Ember.HTMLBars.template({ "id": "lgwfHyo7", "block": "{\"statements\":[[4,\" app/templates/navbar.hbs \"],[0,\"\\n\"],[11,\"nav\",[]],[15,\"class\",\"navbar navbar-inverse\"],[13],[0,\"\\n  \"],[11,\"div\",[]],[15,\"class\",\"container-fluid\"],[13],[0,\"\\n    \"],[11,\"div\",[]],[15,\"class\",\"navbar-header\"],[13],[0,\"\\n      \"],[11,\"button\",[]],[15,\"type\",\"button\"],[15,\"class\",\"navbar-toggle collapsed\"],[15,\"data-toggle\",\"collapse\"],[15,\"data-target\",\"#main-navbar\"],[13],[0,\"\\n        \"],[11,\"span\",[]],[15,\"class\",\"sr-only\"],[13],[0,\"Toggle navigation\"],[14],[0,\"\\n        \"],[11,\"span\",[]],[15,\"class\",\"icon-bar\"],[13],[14],[0,\"\\n        \"],[11,\"span\",[]],[15,\"class\",\"icon-bar\"],[13],[14],[0,\"\\n        \"],[11,\"span\",[]],[15,\"class\",\"icon-bar\"],[13],[14],[0,\"\\n      \"],[14],[0,\"\\n      \"],[6,[\"link-to\"],[\"index\"],[[\"class\"],[\"navbar-brand\"]],{\"statements\":[[0,\"Library App\"]],\"locals\":[]},null],[0,\"\\n    \"],[14],[0,\"\\n\\n    \"],[11,\"div\",[]],[15,\"class\",\"collapse navbar-collapse\"],[15,\"id\",\"main-navbar\"],[13],[0,\"\\n      \"],[11,\"ul\",[]],[15,\"class\",\"nav navbar-nav\"],[13],[0,\"\\n        \"],[6,[\"nav-link-to\"],[\"index\"],null,{\"statements\":[[0,\"Home\"]],\"locals\":[]},null],[0,\"\\n        \"],[6,[\"nav-link-to\"],[\"libraries\"],null,{\"statements\":[[0,\"Libraries\"]],\"locals\":[]},null],[0,\"\\n        \"],[6,[\"nav-link-to\"],[\"about\"],null,{\"statements\":[[0,\"About\"]],\"locals\":[]},null],[0,\"\\n        \"],[6,[\"nav-link-to\"],[\"contact\"],null,{\"statements\":[[0,\"Contact\"]],\"locals\":[]},null],[0,\"\\n      \"],[14],[0,\"\\n\\n      \"],[11,\"ul\",[]],[15,\"class\",\"nav navbar-nav navbar-right\"],[13],[0,\"\\n        \"],[11,\"li\",[]],[15,\"class\",\"dropdown\"],[13],[0,\"\\n          \"],[11,\"a\",[]],[15,\"class\",\"dropdown-toggle\"],[15,\"data-toggle\",\"dropdown\"],[15,\"role\",\"button\"],[15,\"aria-haspopup\",\"true\"],[15,\"aria-expanded\",\"false\"],[13],[0,\"\\n            Admin\"],[11,\"span\",[]],[15,\"class\",\"caret\"],[13],[14],[0,\"\\n          \"],[14],[0,\"\\n          \"],[11,\"ul\",[]],[15,\"class\",\"dropdown-menu\"],[13],[0,\"\\n            \"],[6,[\"nav-link-to\"],[\"admin.invitations\"],null,{\"statements\":[[0,\"Invitations\"]],\"locals\":[]},null],[0,\"\\n            \"],[6,[\"nav-link-to\"],[\"admin.contacts\"],null,{\"statements\":[[0,\"Contacts\"]],\"locals\":[]},null],[0,\"\\n          \"],[14],[0,\"\\n        \"],[14],[0,\"\\n      \"],[14],[0,\"\\n    \"],[14],[4,\" /.navbar-collapse \"],[0,\"\\n  \"],[14],[4,\" /.container-fluid \"],[0,\"\\n\"],[14]],\"locals\":[],\"named\":[],\"yields\":[],\"hasPartials\":false}", "meta": { "moduleName": "ember-test/templates/navbar.hbs" } });
+  exports.default = Ember.HTMLBars.template({ "id": "8rwmX5SQ", "block": "{\"statements\":[[4,\" app/templates/navbar.hbs \"],[0,\"\\n\"],[11,\"nav\",[]],[15,\"class\",\"navbar navbar-inverse\"],[13],[0,\"\\n  \"],[11,\"div\",[]],[15,\"class\",\"container-fluid\"],[13],[0,\"\\n    \"],[11,\"div\",[]],[15,\"class\",\"navbar-header\"],[13],[0,\"\\n      \"],[11,\"button\",[]],[15,\"type\",\"button\"],[15,\"class\",\"navbar-toggle collapsed\"],[15,\"data-toggle\",\"collapse\"],[15,\"data-target\",\"#main-navbar\"],[13],[0,\"\\n        \"],[11,\"span\",[]],[15,\"class\",\"sr-only\"],[13],[0,\"Toggle navigation\"],[14],[0,\"\\n        \"],[11,\"span\",[]],[15,\"class\",\"icon-bar\"],[13],[14],[0,\"\\n        \"],[11,\"span\",[]],[15,\"class\",\"icon-bar\"],[13],[14],[0,\"\\n        \"],[11,\"span\",[]],[15,\"class\",\"icon-bar\"],[13],[14],[0,\"\\n      \"],[14],[0,\"\\n      \"],[6,[\"link-to\"],[\"index\"],[[\"class\"],[\"navbar-brand\"]],{\"statements\":[[0,\"Library App\"]],\"locals\":[]},null],[0,\"\\n    \"],[14],[0,\"\\n\\n    \"],[11,\"div\",[]],[15,\"class\",\"collapse navbar-collapse\"],[15,\"id\",\"main-navbar\"],[13],[0,\"\\n      \"],[11,\"ul\",[]],[15,\"class\",\"nav navbar-nav\"],[13],[0,\"\\n        \"],[6,[\"nav-link-to\"],[\"index\"],null,{\"statements\":[[0,\"Home\"]],\"locals\":[]},null],[0,\"\\n        \"],[6,[\"nav-link-to\"],[\"libraries\"],null,{\"statements\":[[0,\"Libraries\"]],\"locals\":[]},null],[0,\"\\n        \"],[6,[\"nav-link-to\"],[\"about\"],null,{\"statements\":[[0,\"About\"]],\"locals\":[]},null],[0,\"\\n        \"],[6,[\"nav-link-to\"],[\"contact\"],null,{\"statements\":[[0,\"Contact\"]],\"locals\":[]},null],[0,\"\\n      \"],[14],[0,\"\\n\\n      \"],[11,\"ul\",[]],[15,\"class\",\"nav navbar-nav navbar-right\"],[13],[0,\"\\n        \"],[11,\"li\",[]],[15,\"class\",\"dropdown\"],[13],[0,\"\\n          \"],[11,\"a\",[]],[15,\"class\",\"dropdown-toggle\"],[15,\"data-toggle\",\"dropdown\"],[15,\"role\",\"button\"],[15,\"aria-haspopup\",\"true\"],[15,\"aria-expanded\",\"false\"],[13],[0,\"\\n            Admin\"],[11,\"span\",[]],[15,\"class\",\"caret\"],[13],[14],[0,\"\\n          \"],[14],[0,\"\\n          \"],[11,\"ul\",[]],[15,\"class\",\"dropdown-menu\"],[13],[0,\"\\n            \"],[6,[\"nav-link-to\"],[\"admin.invitations\"],null,{\"statements\":[[0,\"Invitations\"]],\"locals\":[]},null],[0,\"\\n            \"],[6,[\"nav-link-to\"],[\"admin.contact\"],null,{\"statements\":[[0,\"Contacts\"]],\"locals\":[]},null],[0,\"\\n            \"],[6,[\"nav-link-to\"],[\"admin.seeder\"],null,{\"statements\":[[0,\"Seeder\"]],\"locals\":[]},null],[0,\"\\n          \"],[14],[0,\"\\n        \"],[14],[0,\"\\n      \"],[14],[0,\"\\n    \"],[14],[4,\" /.navbar-collapse \"],[0,\"\\n  \"],[14],[4,\" /.container-fluid \"],[0,\"\\n\"],[14]],\"locals\":[],\"named\":[],\"yields\":[],\"hasPartials\":false}", "meta": { "moduleName": "ember-test/templates/navbar.hbs" } });
 });
 define('ember-test/torii-providers/firebase', ['exports', 'emberfire/torii-providers/firebase'], function (exports, _firebase) {
   'use strict';
@@ -856,6 +1251,6 @@ catch(err) {
 });
 
 if (!runningTests) {
-  require("ember-test/app")["default"].create({"LOG_ACTIVE_GENERATION":true,"LOG_TRANSITIONS":true,"LOG_TRANSITIONS_INTERNAL":true,"LOG_VIEW_LOOKUPS":true,"name":"ember-test","version":"0.0.0+5f1fd4d2"});
+  require("ember-test/app")["default"].create({"LOG_ACTIVE_GENERATION":true,"LOG_TRANSITIONS":true,"LOG_TRANSITIONS_INTERNAL":true,"LOG_VIEW_LOOKUPS":true,"name":"ember-test","version":"0.0.0+ec2ddb35"});
 }
 //# sourceMappingURL=ember-test.map
