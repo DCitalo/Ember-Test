@@ -28,6 +28,40 @@ define('ember-test/app', ['exports', 'ember-test/resolver', 'ember-load-initiali
 
   exports.default = App;
 });
+define('ember-test/components/library-item-form', ['exports'], function (exports) {
+  'use strict';
+
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.default = Ember.Component.extend({
+    buttonLabel: 'Save',
+
+    actions: {
+      buttonClicked: function buttonClicked(param) {
+        this.sendAction('action', param);
+      }
+    }
+  });
+});
+define('ember-test/components/library-item', ['exports'], function (exports) {
+  'use strict';
+
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.default = Ember.Component.extend({});
+});
+define('ember-test/components/nav-link-to', ['exports'], function (exports) {
+  'use strict';
+
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.default = Ember.LinkComponent.extend({
+    tagName: 'li'
+  });
+});
 define('ember-test/components/welcome-page', ['exports', 'ember-welcome-page/components/welcome-page'], function (exports, _welcomePage) {
   'use strict';
 
@@ -326,9 +360,12 @@ define('ember-test/models/library', ['exports', 'ember-data'], function (exports
     value: true
   });
   exports.default = _emberData.default.Model.extend({
+
     name: _emberData.default.attr('string'),
     address: _emberData.default.attr('string'),
-    phone: _emberData.default.attr('string')
+    phone: _emberData.default.attr('string'),
+
+    isValid: Ember.computed.notEmpty('name')
   });
 });
 define('ember-test/models/mensagem', ['exports', 'ember-data'], function (exports, _emberData) {
@@ -378,6 +415,7 @@ define('ember-test/router', ['exports', 'ember-test/config/environment'], functi
     this.route('libraries', function () {
       this.route('new');
       this.route('edit', { path: '/:library_id/edit' });
+      this.route('form');
     });
   });
 
@@ -530,6 +568,15 @@ define('ember-test/routes/libraries/edit', ['exports'], function (exports) {
     model: function model(params) {
       return this.store.findRecord('library', params.library_id);
     },
+    setupController: function setupController(controller, model) {
+      this._super(controller, model);
+
+      controller.set('title', 'Edit library');
+      controller.set('buttonLabel', 'Save changes');
+    },
+    renderTemplate: function renderTemplate() {
+      this.render('libraries/form');
+    },
 
 
     actions: {
@@ -541,7 +588,6 @@ define('ember-test/routes/libraries/edit', ['exports'], function (exports) {
         });
       },
       willTransition: function willTransition(transition) {
-
         var model = this.controller.get('model');
 
         if (model.get('hasDirtyAttributes')) {
@@ -556,6 +602,14 @@ define('ember-test/routes/libraries/edit', ['exports'], function (exports) {
       }
     }
   });
+});
+define('ember-test/routes/libraries/form', ['exports'], function (exports) {
+  'use strict';
+
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.default = Ember.Route.extend({});
 });
 define('ember-test/routes/libraries/index', ['exports'], function (exports) {
   'use strict';
@@ -588,8 +642,20 @@ define('ember-test/routes/libraries/new', ['exports'], function (exports) {
     value: true
   });
   exports.default = Ember.Route.extend({
+
     model: function model() {
       return this.store.createRecord('library');
+    },
+
+    setupController: function setupController(controller, model) {
+      this._super(controller, model);
+
+      controller.set('title', 'Create a new library');
+      controller.set('buttonLabel', 'Create');
+    },
+
+    renderTemplate: function renderTemplate() {
+      this.render('libraries/form');
     },
 
 
@@ -688,6 +754,30 @@ define("ember-test/templates/application", ["exports"], function (exports) {
   });
   exports.default = Ember.HTMLBars.template({ "id": "Iia1+1NY", "block": "{\"statements\":[[11,\"div\",[]],[15,\"class\",\"container\"],[13],[0,\"\\n  \"],[19,\"navbar\"],[0,\"\\n  \"],[1,[26,[\"outlet\"]],false],[0,\"\\n\"],[14]],\"locals\":[],\"named\":[],\"yields\":[],\"hasPartials\":true}", "meta": { "moduleName": "ember-test/templates/application.hbs" } });
 });
+define("ember-test/templates/components/library-item-form", ["exports"], function (exports) {
+  "use strict";
+
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.default = Ember.HTMLBars.template({ "id": "Ohr5Ig9b", "block": "{\"statements\":[[4,\" app/templates/components/library-item-form.hbs \"],[0,\"\\n\"],[11,\"div\",[]],[15,\"class\",\"form-horizontal\"],[13],[0,\"\\n    \"],[11,\"div\",[]],[16,\"class\",[34,[\"form-group has-feedback \",[33,[\"if\"],[[28,[\"item\",\"isValid\"]],\"has-success\"],null]]]],[13],[0,\"\\n        \"],[11,\"label\",[]],[15,\"class\",\"col-sm-2 control-label\"],[13],[0,\"Name*\"],[14],[0,\"\\n        \"],[11,\"div\",[]],[15,\"class\",\"col-sm-10\"],[13],[0,\"\\n          \"],[1,[33,[\"input\"],null,[[\"type\",\"value\",\"class\",\"placeholder\"],[\"text\",[28,[\"item\",\"name\"]],\"form-control\",\"The name of the Library\"]]],false],[0,\"\\n          \"],[6,[\"if\"],[[28,[\"item\",\"isValid\"]]],null,{\"statements\":[[11,\"span\",[]],[15,\"class\",\"glyphicon glyphicon-ok form-control-feedback\"],[13],[14]],\"locals\":[]},null],[0,\"\\n        \"],[14],[0,\"\\n    \"],[14],[0,\"\\n    \"],[11,\"div\",[]],[15,\"class\",\"form-group\"],[13],[0,\"\\n        \"],[11,\"label\",[]],[15,\"class\",\"col-sm-2 control-label\"],[13],[0,\"Address\"],[14],[0,\"\\n        \"],[11,\"div\",[]],[15,\"class\",\"col-sm-10\"],[13],[0,\"\\n          \"],[1,[33,[\"input\"],null,[[\"type\",\"value\",\"class\",\"placeholder\"],[\"text\",[28,[\"item\",\"address\"]],\"form-control\",\"The address of the Library\"]]],false],[0,\"\\n        \"],[14],[0,\"\\n    \"],[14],[0,\"\\n    \"],[11,\"div\",[]],[15,\"class\",\"form-group\"],[13],[0,\"\\n        \"],[11,\"label\",[]],[15,\"class\",\"col-sm-2 control-label\"],[13],[0,\"Phone\"],[14],[0,\"\\n        \"],[11,\"div\",[]],[15,\"class\",\"col-sm-10\"],[13],[0,\"\\n          \"],[1,[33,[\"input\"],null,[[\"type\",\"value\",\"class\",\"placeholder\"],[\"text\",[28,[\"item\",\"phone\"]],\"form-control\",\"The phone number of the Library\"]]],false],[0,\"\\n        \"],[14],[0,\"\\n    \"],[14],[0,\"\\n    \"],[11,\"div\",[]],[15,\"class\",\"form-group\"],[13],[0,\"\\n        \"],[11,\"div\",[]],[15,\"class\",\"col-sm-offset-2 col-sm-10\"],[13],[0,\"\\n            \"],[11,\"button\",[]],[15,\"type\",\"submit\"],[15,\"class\",\"btn btn-default\"],[16,\"disabled\",[33,[\"unless\"],[[28,[\"item\",\"isValid\"]],true],null],null],[5,[\"action\"],[[28,[null]],\"buttonClicked\",[28,[\"item\"]]]],[13],[1,[26,[\"buttonLabel\"]],false],[14],[0,\"\\n        \"],[14],[0,\"\\n    \"],[14],[0,\"\\n\"],[14]],\"locals\":[],\"named\":[],\"yields\":[],\"hasPartials\":false}", "meta": { "moduleName": "ember-test/templates/components/library-item-form.hbs" } });
+});
+define("ember-test/templates/components/library-item", ["exports"], function (exports) {
+  "use strict";
+
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.default = Ember.HTMLBars.template({ "id": "BIrbnvgk", "block": "{\"statements\":[[4,\" app/templates/components/library-item.hbs \"],[0,\"\\n\"],[11,\"div\",[]],[15,\"class\",\"panel panel-default library-item\"],[13],[0,\"\\n    \"],[11,\"div\",[]],[15,\"class\",\"panel-heading\"],[13],[0,\"\\n        \"],[11,\"h3\",[]],[15,\"class\",\"panel-title\"],[13],[1,[28,[\"item\",\"name\"]],false],[14],[0,\"\\n    \"],[14],[0,\"\\n    \"],[11,\"div\",[]],[15,\"class\",\"panel-body\"],[13],[0,\"\\n        \"],[11,\"p\",[]],[13],[0,\"Address: \"],[1,[28,[\"item\",\"address\"]],false],[14],[0,\"\\n        \"],[11,\"p\",[]],[13],[0,\"Phone: \"],[1,[28,[\"item\",\"phone\"]],false],[14],[0,\"\\n    \"],[14],[0,\"\\n    \"],[11,\"div\",[]],[15,\"class\",\"panel-footer text-right\"],[13],[0,\"\\n      \"],[18,\"default\"],[0,\"\\n    \"],[14],[0,\"\\n\"],[14],[0,\"\\n\"]],\"locals\":[],\"named\":[],\"yields\":[\"default\"],\"hasPartials\":false}", "meta": { "moduleName": "ember-test/templates/components/library-item.hbs" } });
+});
+define("ember-test/templates/components/nav-link-to", ["exports"], function (exports) {
+  "use strict";
+
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.default = Ember.HTMLBars.template({ "id": "6sz+V3N/", "block": "{\"statements\":[[4,\" app/templates/components/nav-link-to.hbs \"],[0,\"\\n\"],[11,\"a\",[]],[15,\"href\",\"\"],[13],[18,\"default\"],[14]],\"locals\":[],\"named\":[],\"yields\":[\"default\"],\"hasPartials\":false}", "meta": { "moduleName": "ember-test/templates/components/nav-link-to.hbs" } });
+});
 define("ember-test/templates/contact", ["exports"], function (exports) {
   "use strict";
 
@@ -710,15 +800,15 @@ define("ember-test/templates/libraries", ["exports"], function (exports) {
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
-  exports.default = Ember.HTMLBars.template({ "id": "a1NLuxuF", "block": "{\"statements\":[[4,\" app/templates/libraries.hbs \"],[0,\"\\n\"],[11,\"h1\",[]],[13],[0,\"Libraries\"],[14],[0,\"\\n\\n\"],[11,\"div\",[]],[15,\"class\",\"well\"],[13],[0,\"\\n  \"],[11,\"ul\",[]],[15,\"class\",\"nav nav-pills\"],[13],[0,\"\\n    \"],[6,[\"link-to\"],[\"libraries.index\"],[[\"tagName\"],[\"li\"]],{\"statements\":[[11,\"a\",[]],[15,\"href\",\"\"],[13],[0,\"List all\"],[14]],\"locals\":[]},null],[0,\"\\n    \"],[6,[\"link-to\"],[\"libraries.new\"],[[\"tagName\"],[\"li\"]],{\"statements\":[[11,\"a\",[]],[15,\"href\",\"\"],[13],[0,\"Add new\"],[14]],\"locals\":[]},null],[0,\"\\n  \"],[14],[0,\"\\n\"],[14],[0,\"\\n\\n\"],[1,[26,[\"outlet\"]],false]],\"locals\":[],\"named\":[],\"yields\":[],\"hasPartials\":false}", "meta": { "moduleName": "ember-test/templates/libraries.hbs" } });
+  exports.default = Ember.HTMLBars.template({ "id": "lSVJqhkP", "block": "{\"statements\":[[4,\" app/templates/libraries.hbs \"],[0,\"\\n\"],[11,\"h1\",[]],[13],[0,\"Libraries\"],[14],[0,\"\\n\\n\"],[11,\"div\",[]],[15,\"class\",\"well\"],[13],[0,\"\\n  \"],[11,\"ul\",[]],[15,\"class\",\"nav nav-pills\"],[13],[0,\"\\n    \"],[6,[\"nav-link-to\"],[\"libraries.index\"],null,{\"statements\":[[0,\"List all\"]],\"locals\":[]},null],[0,\"\\n    \"],[6,[\"nav-link-to\"],[\"libraries.new\"],null,{\"statements\":[[0,\"Add new\"]],\"locals\":[]},null],[0,\"\\n  \"],[14],[0,\"\\n\"],[14],[0,\"\\n\\n\"],[1,[26,[\"outlet\"]],false]],\"locals\":[],\"named\":[],\"yields\":[],\"hasPartials\":false}", "meta": { "moduleName": "ember-test/templates/libraries.hbs" } });
 });
-define("ember-test/templates/libraries/edit", ["exports"], function (exports) {
+define("ember-test/templates/libraries/form", ["exports"], function (exports) {
   "use strict";
 
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
-  exports.default = Ember.HTMLBars.template({ "id": "CCxPd5Zy", "block": "{\"statements\":[[11,\"h2\",[]],[13],[0,\"Edit Library\"],[14],[0,\"\\n\\n\"],[11,\"div\",[]],[15,\"class\",\"form-horizontal\"],[13],[0,\"\\n  \"],[11,\"div\",[]],[15,\"class\",\"form-group\"],[13],[0,\"\\n    \"],[11,\"label\",[]],[15,\"class\",\"col-sm-2 control-label\"],[13],[0,\"Name\"],[14],[0,\"\\n    \"],[11,\"div\",[]],[15,\"class\",\"col-sm-10\"],[13],[0,\"\\n      \"],[1,[33,[\"input\"],null,[[\"type\",\"value\",\"class\",\"placeholder\"],[\"text\",[28,[\"model\",\"name\"]],\"form-control\",\"The name of the Library\"]]],false],[0,\"\\n    \"],[14],[0,\"\\n  \"],[14],[0,\"\\n  \"],[11,\"div\",[]],[15,\"class\",\"form-group\"],[13],[0,\"\\n    \"],[11,\"label\",[]],[15,\"class\",\"col-sm-2 control-label\"],[13],[0,\"Address\"],[14],[0,\"\\n    \"],[11,\"div\",[]],[15,\"class\",\"col-sm-10\"],[13],[0,\"\\n      \"],[1,[33,[\"input\"],null,[[\"type\",\"value\",\"class\",\"placeholder\"],[\"text\",[28,[\"model\",\"address\"]],\"form-control\",\"The address of the Library\"]]],false],[0,\"\\n    \"],[14],[0,\"\\n  \"],[14],[0,\"\\n  \"],[11,\"div\",[]],[15,\"class\",\"form-group\"],[13],[0,\"\\n    \"],[11,\"label\",[]],[15,\"class\",\"col-sm-2 control-label\"],[13],[0,\"Phone\"],[14],[0,\"\\n    \"],[11,\"div\",[]],[15,\"class\",\"col-sm-10\"],[13],[0,\"\\n      \"],[1,[33,[\"input\"],null,[[\"type\",\"value\",\"class\",\"placeholder\"],[\"text\",[28,[\"model\",\"phone\"]],\"form-control\",\"The phone number of the Library\"]]],false],[0,\"\\n    \"],[14],[0,\"\\n  \"],[14],[0,\"\\n  \"],[11,\"div\",[]],[15,\"class\",\"form-group\"],[13],[0,\"\\n    \"],[11,\"div\",[]],[15,\"class\",\"col-sm-offset-2 col-sm-10\"],[13],[0,\"\\n      \"],[11,\"button\",[]],[15,\"type\",\"submit\"],[15,\"class\",\"btn btn-default\"],[5,[\"action\"],[[28,[null]],\"saveLibrary\",[28,[\"model\"]]]],[13],[0,\"Save changes\"],[14],[0,\"\\n    \"],[14],[0,\"\\n  \"],[14],[0,\"\\n\"],[14]],\"locals\":[],\"named\":[],\"yields\":[],\"hasPartials\":false}", "meta": { "moduleName": "ember-test/templates/libraries/edit.hbs" } });
+  exports.default = Ember.HTMLBars.template({ "id": "SdQfCl8S", "block": "{\"statements\":[[4,\" /app/templates/libraries/form.hbs \"],[0,\"\\n\"],[11,\"h2\",[]],[13],[1,[26,[\"title\"]],false],[14],[0,\"\\n\\n\"],[11,\"div\",[]],[15,\"class\",\"row\"],[13],[0,\"\\n\\n  \"],[11,\"div\",[]],[15,\"class\",\"col-md-6\"],[13],[0,\"\\n    \"],[1,[33,[\"library-item-form\"],null,[[\"item\",\"buttonLabel\",\"action\"],[[28,[\"model\"]],[28,[\"buttonLabel\"]],\"saveLibrary\"]]],false],[0,\"\\n  \"],[14],[0,\"\\n\\n  \"],[11,\"div\",[]],[15,\"class\",\"col-md-4\"],[13],[0,\"\\n\"],[6,[\"library-item\"],null,[[\"item\"],[[28,[\"model\"]]]],{\"statements\":[[0,\"      \"],[11,\"br\",[]],[13],[14],[0,\"\\n\"]],\"locals\":[]},null],[0,\"  \"],[14],[0,\"\\n\\n\"],[14]],\"locals\":[],\"named\":[],\"yields\":[],\"hasPartials\":false}", "meta": { "moduleName": "ember-test/templates/libraries/form.hbs" } });
 });
 define("ember-test/templates/libraries/index", ["exports"], function (exports) {
   "use strict";
@@ -726,15 +816,7 @@ define("ember-test/templates/libraries/index", ["exports"], function (exports) {
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
-  exports.default = Ember.HTMLBars.template({ "id": "LpU1qz6c", "block": "{\"statements\":[[4,\" app/templates/libraries/index.hbs \"],[0,\"\\n\"],[11,\"h2\",[]],[13],[0,\"List\"],[14],[0,\"\\n\"],[11,\"div\",[]],[15,\"class\",\"row\"],[13],[0,\"\\n\"],[6,[\"each\"],[[28,[\"model\"]]],null,{\"statements\":[[0,\"    \"],[11,\"div\",[]],[15,\"class\",\"col-md-4\"],[13],[0,\"\\n      \"],[11,\"div\",[]],[15,\"class\",\"panel panel-default library-item\"],[13],[0,\"\\n        \"],[11,\"div\",[]],[15,\"class\",\"panel-heading\"],[13],[0,\"\\n          \"],[11,\"h3\",[]],[15,\"class\",\"panel-title\"],[13],[1,[28,[\"library\",\"name\"]],false],[14],[0,\"\\n        \"],[14],[0,\"\\n        \"],[11,\"div\",[]],[15,\"class\",\"panel-body\"],[13],[0,\"\\n          \"],[11,\"p\",[]],[13],[0,\"Address: \"],[1,[28,[\"library\",\"address\"]],false],[14],[0,\"\\n          \"],[11,\"p\",[]],[13],[0,\"Phone: \"],[1,[28,[\"library\",\"phone\"]],false],[14],[0,\"\\n        \"],[14],[0,\"\\n        \"],[11,\"div\",[]],[15,\"class\",\"panel-footer text-right\"],[13],[0,\"\\n          \"],[6,[\"link-to\"],[\"libraries.edit\",[28,[\"library\",\"id\"]]],[[\"class\"],[\"btn btn-success btn-xs\"]],{\"statements\":[[0,\"Edit\"]],\"locals\":[]},null],[0,\"\\n          \"],[11,\"button\",[]],[15,\"class\",\"btn btn-danger btn-xs\"],[5,[\"action\"],[[28,[null]],\"deleteLibrary\",[28,[\"library\"]]]],[13],[0,\"Delete\"],[14],[0,\"\\n        \"],[14],[0,\"\\n      \"],[14],[0,\"\\n    \"],[14],[0,\"\\n\"]],\"locals\":[\"library\"]},null],[14]],\"locals\":[],\"named\":[],\"yields\":[],\"hasPartials\":false}", "meta": { "moduleName": "ember-test/templates/libraries/index.hbs" } });
-});
-define("ember-test/templates/libraries/new", ["exports"], function (exports) {
-  "use strict";
-
-  Object.defineProperty(exports, "__esModule", {
-    value: true
-  });
-  exports.default = Ember.HTMLBars.template({ "id": "ku2R7F/M", "block": "{\"statements\":[[4,\" app/templates/libraries/new.hbs \"],[0,\"\\n\"],[11,\"h2\",[]],[13],[0,\"Add a new local Library\"],[14],[0,\"\\n\\n\"],[11,\"div\",[]],[15,\"class\",\"form-horizontal\"],[13],[0,\"\\n  \"],[11,\"div\",[]],[15,\"class\",\"form-group\"],[13],[0,\"\\n    \"],[11,\"label\",[]],[15,\"class\",\"col-sm-2 control-label\"],[13],[0,\"Name\"],[14],[0,\"\\n    \"],[11,\"div\",[]],[15,\"class\",\"col-sm-10\"],[13],[0,\"\\n      \"],[1,[33,[\"input\"],null,[[\"type\",\"value\",\"class\",\"placeholder\"],[\"text\",[28,[\"model\",\"name\"]],\"form-control\",\"The name of the Library\"]]],false],[0,\"\\n    \"],[14],[0,\"\\n  \"],[14],[0,\"\\n  \"],[11,\"div\",[]],[15,\"class\",\"form-group\"],[13],[0,\"\\n    \"],[11,\"label\",[]],[15,\"class\",\"col-sm-2 control-label\"],[13],[0,\"Address\"],[14],[0,\"\\n    \"],[11,\"div\",[]],[15,\"class\",\"col-sm-10\"],[13],[0,\"\\n      \"],[1,[33,[\"input\"],null,[[\"type\",\"value\",\"class\",\"placeholder\"],[\"text\",[28,[\"model\",\"address\"]],\"form-control\",\"The address of the Library\"]]],false],[0,\"\\n    \"],[14],[0,\"\\n  \"],[14],[0,\"\\n  \"],[11,\"div\",[]],[15,\"class\",\"form-group\"],[13],[0,\"\\n    \"],[11,\"label\",[]],[15,\"class\",\"col-sm-2 control-label\"],[13],[0,\"Phone\"],[14],[0,\"\\n    \"],[11,\"div\",[]],[15,\"class\",\"col-sm-10\"],[13],[0,\"\\n      \"],[1,[33,[\"input\"],null,[[\"type\",\"value\",\"class\",\"placeholder\"],[\"text\",[28,[\"model\",\"phone\"]],\"form-control\",\"The phone number of the Library\"]]],false],[0,\"\\n    \"],[14],[0,\"\\n  \"],[14],[0,\"\\n  \"],[11,\"div\",[]],[15,\"class\",\"form-group\"],[13],[0,\"\\n    \"],[11,\"div\",[]],[15,\"class\",\"col-sm-offset-2 col-sm-10\"],[13],[0,\"\\n      \"],[11,\"button\",[]],[15,\"type\",\"submit\"],[15,\"class\",\"btn btn-default\"],[5,[\"action\"],[[28,[null]],\"saveLibrary\",[28,[\"model\"]]]],[13],[0,\"Add to library list\"],[14],[0,\"\\n    \"],[14],[0,\"\\n  \"],[14],[0,\"\\n\"],[14]],\"locals\":[],\"named\":[],\"yields\":[],\"hasPartials\":false}", "meta": { "moduleName": "ember-test/templates/libraries/new.hbs" } });
+  exports.default = Ember.HTMLBars.template({ "id": "kAelLbiZ", "block": "{\"statements\":[[11,\"h2\",[]],[13],[0,\"List\"],[14],[0,\"\\n\"],[11,\"div\",[]],[15,\"class\",\"row\"],[13],[0,\"\\n\"],[6,[\"each\"],[[28,[\"model\"]]],null,{\"statements\":[[0,\"    \"],[11,\"div\",[]],[15,\"class\",\"col-md-4\"],[13],[0,\"\\n\"],[6,[\"library-item\"],null,[[\"item\"],[[28,[\"library\"]]]],{\"statements\":[[0,\"        \"],[6,[\"link-to\"],[\"libraries.edit\",[28,[\"library\",\"id\"]]],[[\"class\"],[\"btn btn-success btn-xs\"]],{\"statements\":[[0,\"Edit\"]],\"locals\":[]},null],[0,\"\\n        \"],[11,\"button\",[]],[15,\"class\",\"btn btn-danger btn-xs\"],[5,[\"action\"],[[28,[null]],\"deleteLibrary\",[28,[\"library\"]]]],[13],[0,\"Delete\"],[14],[0,\"\\n\"]],\"locals\":[]},null],[0,\"    \"],[14],[0,\"\\n\"]],\"locals\":[\"library\"]},null],[14]],\"locals\":[],\"named\":[],\"yields\":[],\"hasPartials\":false}", "meta": { "moduleName": "ember-test/templates/libraries/index.hbs" } });
 });
 define("ember-test/templates/navbar", ["exports"], function (exports) {
   "use strict";
@@ -742,7 +824,7 @@ define("ember-test/templates/navbar", ["exports"], function (exports) {
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
-  exports.default = Ember.HTMLBars.template({ "id": "Ifj7bUiK", "block": "{\"statements\":[[11,\"nav\",[]],[15,\"class\",\"navbar navbar-inverse\"],[13],[0,\"\\n  \"],[11,\"div\",[]],[15,\"class\",\"container-fluid\"],[13],[0,\"\\n    \"],[11,\"div\",[]],[15,\"class\",\"navbar-header\"],[13],[0,\"\\n      \"],[11,\"button\",[]],[15,\"type\",\"button\"],[15,\"class\",\"navbar-toggle collapsed\"],[15,\"data-toggle\",\"collapse\"],[15,\"data-target\",\"#main-navbar\"],[13],[0,\"\\n        \"],[11,\"span\",[]],[15,\"class\",\"sr-only\"],[13],[0,\"Toggle navigation\"],[14],[0,\"\\n        \"],[11,\"span\",[]],[15,\"class\",\"icon-bar\"],[13],[14],[0,\"\\n        \"],[11,\"span\",[]],[15,\"class\",\"icon-bar\"],[13],[14],[0,\"\\n        \"],[11,\"span\",[]],[15,\"class\",\"icon-bar\"],[13],[14],[0,\"\\n      \"],[14],[0,\"\\n      \"],[6,[\"link-to\"],[\"index\"],[[\"class\"],[\"navbar-brand\"]],{\"statements\":[[0,\"Ember Test\"]],\"locals\":[]},null],[0,\"\\n    \"],[14],[0,\"\\n\\n    \"],[11,\"div\",[]],[15,\"class\",\"collapse navbar-collapse\"],[15,\"id\",\"main-navbar\"],[13],[0,\"\\n      \"],[11,\"ul\",[]],[15,\"class\",\"nav navbar-nav\"],[13],[0,\"\\n            \"],[6,[\"link-to\"],[\"index\"],[[\"tagName\"],[\"li\"]],{\"statements\":[[11,\"a\",[]],[15,\"href\",\"\"],[13],[0,\"Home\"],[14]],\"locals\":[]},null],[0,\"\\n            \"],[6,[\"link-to\"],[\"libraries\"],[[\"tagName\"],[\"li\"]],{\"statements\":[[11,\"a\",[]],[15,\"href\",\"\"],[13],[0,\"Libraries\"],[14]],\"locals\":[]},null],[0,\"\\n            \"],[6,[\"link-to\"],[\"about\"],[[\"tagName\"],[\"li\"]],{\"statements\":[[11,\"a\",[]],[15,\"href\",\"\"],[13],[0,\"About\"],[14]],\"locals\":[]},null],[0,\"\\n            \"],[6,[\"link-to\"],[\"contact\"],[[\"tagName\"],[\"li\"]],{\"statements\":[[11,\"a\",[]],[15,\"href\",\"\"],[13],[0,\"Contact\"],[14]],\"locals\":[]},null],[0,\"\\n      \"],[14],[0,\"\\n      \"],[11,\"ul\",[]],[15,\"class\",\"nav navbar-nav navbar-right\"],[13],[0,\"\\n          \"],[11,\"li\",[]],[15,\"class\",\"dropdown\"],[13],[0,\"\\n            \"],[11,\"a\",[]],[15,\"class\",\"dropdown-toggle\"],[15,\"data-toggle\",\"dropdown\"],[15,\"role\",\"button\"],[15,\"aria-haspopup\",\"true\"],[15,\"aria-expanded\",\"false\"],[13],[0,\"\\n              Admin\"],[11,\"span\",[]],[15,\"class\",\"caret\"],[13],[14],[0,\"\\n            \"],[14],[0,\"\\n            \"],[11,\"ul\",[]],[15,\"class\",\"dropdown-menu\"],[13],[0,\"\\n            \"],[6,[\"link-to\"],[\"admin.invitations\"],[[\"tagName\"],[\"li\"]],{\"statements\":[[11,\"a\",[]],[15,\"href\",\"\"],[13],[0,\"Invitations\"],[14]],\"locals\":[]},null],[0,\"\\n            \"],[6,[\"link-to\"],[\"admin.contact\"],[[\"tagName\"],[\"li\"]],{\"statements\":[[11,\"a\",[]],[15,\"href\",\"\"],[13],[0,\"Contacts\"],[14]],\"locals\":[]},null],[0,\"\\n            \"],[14],[0,\"\\n          \"],[14],[0,\"\\n        \"],[14],[0,\"\\n    \"],[14],[4,\" /.navbar-collapse \"],[0,\"\\n  \"],[14],[4,\" /.container-fluid \"],[0,\"\\n\"],[14]],\"locals\":[],\"named\":[],\"yields\":[],\"hasPartials\":false}", "meta": { "moduleName": "ember-test/templates/navbar.hbs" } });
+  exports.default = Ember.HTMLBars.template({ "id": "lgwfHyo7", "block": "{\"statements\":[[4,\" app/templates/navbar.hbs \"],[0,\"\\n\"],[11,\"nav\",[]],[15,\"class\",\"navbar navbar-inverse\"],[13],[0,\"\\n  \"],[11,\"div\",[]],[15,\"class\",\"container-fluid\"],[13],[0,\"\\n    \"],[11,\"div\",[]],[15,\"class\",\"navbar-header\"],[13],[0,\"\\n      \"],[11,\"button\",[]],[15,\"type\",\"button\"],[15,\"class\",\"navbar-toggle collapsed\"],[15,\"data-toggle\",\"collapse\"],[15,\"data-target\",\"#main-navbar\"],[13],[0,\"\\n        \"],[11,\"span\",[]],[15,\"class\",\"sr-only\"],[13],[0,\"Toggle navigation\"],[14],[0,\"\\n        \"],[11,\"span\",[]],[15,\"class\",\"icon-bar\"],[13],[14],[0,\"\\n        \"],[11,\"span\",[]],[15,\"class\",\"icon-bar\"],[13],[14],[0,\"\\n        \"],[11,\"span\",[]],[15,\"class\",\"icon-bar\"],[13],[14],[0,\"\\n      \"],[14],[0,\"\\n      \"],[6,[\"link-to\"],[\"index\"],[[\"class\"],[\"navbar-brand\"]],{\"statements\":[[0,\"Library App\"]],\"locals\":[]},null],[0,\"\\n    \"],[14],[0,\"\\n\\n    \"],[11,\"div\",[]],[15,\"class\",\"collapse navbar-collapse\"],[15,\"id\",\"main-navbar\"],[13],[0,\"\\n      \"],[11,\"ul\",[]],[15,\"class\",\"nav navbar-nav\"],[13],[0,\"\\n        \"],[6,[\"nav-link-to\"],[\"index\"],null,{\"statements\":[[0,\"Home\"]],\"locals\":[]},null],[0,\"\\n        \"],[6,[\"nav-link-to\"],[\"libraries\"],null,{\"statements\":[[0,\"Libraries\"]],\"locals\":[]},null],[0,\"\\n        \"],[6,[\"nav-link-to\"],[\"about\"],null,{\"statements\":[[0,\"About\"]],\"locals\":[]},null],[0,\"\\n        \"],[6,[\"nav-link-to\"],[\"contact\"],null,{\"statements\":[[0,\"Contact\"]],\"locals\":[]},null],[0,\"\\n      \"],[14],[0,\"\\n\\n      \"],[11,\"ul\",[]],[15,\"class\",\"nav navbar-nav navbar-right\"],[13],[0,\"\\n        \"],[11,\"li\",[]],[15,\"class\",\"dropdown\"],[13],[0,\"\\n          \"],[11,\"a\",[]],[15,\"class\",\"dropdown-toggle\"],[15,\"data-toggle\",\"dropdown\"],[15,\"role\",\"button\"],[15,\"aria-haspopup\",\"true\"],[15,\"aria-expanded\",\"false\"],[13],[0,\"\\n            Admin\"],[11,\"span\",[]],[15,\"class\",\"caret\"],[13],[14],[0,\"\\n          \"],[14],[0,\"\\n          \"],[11,\"ul\",[]],[15,\"class\",\"dropdown-menu\"],[13],[0,\"\\n            \"],[6,[\"nav-link-to\"],[\"admin.invitations\"],null,{\"statements\":[[0,\"Invitations\"]],\"locals\":[]},null],[0,\"\\n            \"],[6,[\"nav-link-to\"],[\"admin.contacts\"],null,{\"statements\":[[0,\"Contacts\"]],\"locals\":[]},null],[0,\"\\n          \"],[14],[0,\"\\n        \"],[14],[0,\"\\n      \"],[14],[0,\"\\n    \"],[14],[4,\" /.navbar-collapse \"],[0,\"\\n  \"],[14],[4,\" /.container-fluid \"],[0,\"\\n\"],[14]],\"locals\":[],\"named\":[],\"yields\":[],\"hasPartials\":false}", "meta": { "moduleName": "ember-test/templates/navbar.hbs" } });
 });
 define('ember-test/torii-providers/firebase', ['exports', 'emberfire/torii-providers/firebase'], function (exports, _firebase) {
   'use strict';
@@ -774,6 +856,6 @@ catch(err) {
 });
 
 if (!runningTests) {
-  require("ember-test/app")["default"].create({"LOG_ACTIVE_GENERATION":true,"LOG_TRANSITIONS":true,"LOG_TRANSITIONS_INTERNAL":true,"LOG_VIEW_LOOKUPS":true,"name":"ember-test","version":"0.0.0+6253f9b6"});
+  require("ember-test/app")["default"].create({"LOG_ACTIVE_GENERATION":true,"LOG_TRANSITIONS":true,"LOG_TRANSITIONS_INTERNAL":true,"LOG_VIEW_LOOKUPS":true,"name":"ember-test","version":"0.0.0+5f1fd4d2"});
 }
 //# sourceMappingURL=ember-test.map
